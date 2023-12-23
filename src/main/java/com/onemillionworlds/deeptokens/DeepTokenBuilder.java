@@ -21,13 +21,17 @@ public class DeepTokenBuilder{
         // Step 1: Determine the Perimeter
         List<Point> perimeter = MooreNeighbourhood.detectPerimeter(image);
 
+        List<Point> simplePerimeter = DouglasPeuckerLineSimplifier.simplify(perimeter, 5);
+
+        System.out.println(perimeter.size() + " -> " + simplePerimeter.size());
+
         // Step 2: Triangulate the Perimeter
-        List<Triangle> triangles = Triangulariser.triangulate(perimeter);
+        List<Triangle> triangles = Triangulariser.triangulate(simplePerimeter);
 
         // Step 3: Create a Custom Mesh
         float imageWidth = image.getWidth();
         float imageHeight = image.getHeight();
-        Mesh mesh = MeshBuilder.createCustomMesh(triangles, perimeter, imageWidth, imageHeight, imageDepth);
+        Mesh mesh = MeshBuilder.createCustomMesh(triangles, simplePerimeter, imageWidth, imageHeight, imageDepth);
 
         // Convert BufferedImage to JME Texture
         Texture texture = new Texture2D(loader.load(image, true));
