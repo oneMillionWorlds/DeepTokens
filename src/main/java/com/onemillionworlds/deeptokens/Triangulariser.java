@@ -18,8 +18,7 @@ public class Triangulariser{
                 Point next = remainingPoints.get((i + 1) % size);
 
                 if (isConvex(prev, curr, next) && noPointsInside(remainingPoints, prev, curr, next)) {
-                    List<Point> triangle = new ArrayList<>();
-                    triangles.add(new Triangle(prev, curr, next));
+                     triangles.add(new Triangle(prev, curr, next));
 
                     remainingPoints.remove(i);
                     break;

@@ -27,7 +27,7 @@ public class DeepTokenBuilder{
         // Step 3: Create a Custom Mesh
         float imageWidth = image.getWidth();
         float imageHeight = image.getHeight();
-        Mesh mesh = MeshBuilder.createCustomMesh(triangles, imageWidth, imageHeight, imageDepth);
+        Mesh mesh = MeshBuilder.createCustomMesh(triangles, perimeter, imageWidth, imageHeight, imageDepth);
 
         // Convert BufferedImage to JME Texture
         Texture texture = new Texture2D(loader.load(image, true));
