@@ -14,9 +14,11 @@ import java.util.List;
 public class MeshBuilder{
 
 
-    public static Mesh createCustomMesh(List<Triangle> triangles, List<Point> edges, float imageWidth, float imageHeight, float objectDepth) {
+    public static Mesh createCustomMesh(List<Triangle> triangles, List<Point> edges, float imageWidthPixels, float imageHeightPixels, float objectWidth, float objectDepth) {
         float halfDepth = objectDepth / 2f;
         Mesh mesh = new Mesh();
+
+        float pixelScale = objectWidth / imageWidthPixels;
 
         // Initialize lists for vertices, texture coordinates, and indices
         List<Vector3f> vertices = new ArrayList<>();
@@ -24,33 +26,31 @@ public class MeshBuilder{
         List<Integer> indices = new ArrayList<>();
 
         // Add upper and lower face vertices, texture coords, and indices
-        addFace(triangles, vertices, texCoords, indices, halfDepth, imageWidth, imageHeight, true); // upper face
-        addFace(triangles, vertices, texCoords, indices, -halfDepth, imageWidth, imageHeight, false); // lower face
+        addFace(triangles, vertices, texCoords, indices, halfDepth, imageWidthPixels, imageHeightPixels, pixelScale, true); // upper face
+        addFace(triangles, vertices, texCoords, indices, -halfDepth, imageWidthPixels, imageHeightPixels, pixelScale, false); // lower face
 
         // Add edge vertices, texture coords, and indices
-        addEdges(edges, vertices, texCoords, indices, halfDepth, imageWidth, imageHeight);
+        addEdges(edges, vertices, texCoords, indices, halfDepth, imageWidthPixels, pixelScale, imageHeightPixels);
 
         // Convert lists to arrays
-        Vector3f[] verticesArray = vertices.toArray(new Vector3f[0]);
-        Vector2f[] texCoordsArray = texCoords.toArray(new Vector2f[0]);
         int[] indicesArray = indices.stream().mapToInt(i -> i).toArray();
 
         // Set mesh buffers
-        mesh.setBuffer(VertexBuffer.Type.Position, 3, BufferUtils.createFloatBuffer(verticesArray));
-        mesh.setBuffer(VertexBuffer.Type.TexCoord, 2, BufferUtils.createFloatBuffer(texCoordsArray));
+        mesh.setBuffer(VertexBuffer.Type.Position, 3, createFloatBufferVector3(vertices));
+        mesh.setBuffer(VertexBuffer.Type.TexCoord, 2, createFloatBufferVector2(texCoords));
         mesh.setBuffer(VertexBuffer.Type.Index, 1, BufferUtils.createIntBuffer(indicesArray));
         mesh.updateBound();
 
         return mesh;
     }
 
-    private static void addFace(List<Triangle> triangles, List<Vector3f> vertices, List<Vector2f> texCoords, List<Integer> indices, float z, float imageWidth, float imageHeight, boolean isUpper) {
+    private static void addFace(List<Triangle> triangles, List<Vector3f> vertices, List<Vector2f> texCoords, List<Integer> indices, float z, float imageWidth, float imageHeight, float pixelScale, boolean isUpper) {
         int startIdx = vertices.size();
         for (Triangle t : triangles) {
             // Add vertices
-            vertices.add(new Vector3f(t.a().x, t.a().y, z));
-            vertices.add(new Vector3f(t.b().x, t.b().y, z));
-            vertices.add(new Vector3f(t.c().x, t.c().y, z));
+            vertices.add(new Vector3f(t.a().x*pixelScale, t.a().y*pixelScale, z));
+            vertices.add(new Vector3f(t.b().x*pixelScale, t.b().y*pixelScale, z));
+            vertices.add(new Vector3f(t.c().x*pixelScale, t.c().y*pixelScale, z));
 
             // Add texture coordinates
             texCoords.add(new Vector2f(t.a().x / imageWidth, t.a().y / imageHeight));
@@ -72,7 +72,7 @@ public class MeshBuilder{
         }
     }
 
-    private static void addEdges(List<Point> edges, List<Vector3f> vertices, List<Vector2f> texCoords, List<Integer> indices, float halfDepth, float imageWidth, float imageHeight) {
+    private static void addEdges(List<Point> edges, List<Vector3f> vertices, List<Vector2f> texCoords, List<Integer> indices, float halfDepth, float imageWidth, float pixelScale, float imageHeight) {
         int startIdx = vertices.size();
 
         for (int i = 0; i < edges.size(); i++) {
@@ -80,10 +80,10 @@ public class MeshBuilder{
             Point next = edges.get((i + 1) % edges.size()); // Wrap around to the first point
 
             // Define vertices for the edge quad
-            Vector3f v1 = new Vector3f(current.x, current.y, -halfDepth);
-            Vector3f v2 = new Vector3f(current.x, current.y, halfDepth);
-            Vector3f v3 = new Vector3f(next.x, next.y, halfDepth);
-            Vector3f v4 = new Vector3f(next.x, next.y, -halfDepth);
+            Vector3f v1 = new Vector3f(current.x*pixelScale, current.y*pixelScale, -halfDepth);
+            Vector3f v2 = new Vector3f(current.x*pixelScale, current.y*pixelScale, halfDepth);
+            Vector3f v3 = new Vector3f(next.x*pixelScale, next.y*pixelScale, halfDepth);
+            Vector3f v4 = new Vector3f(next.x*pixelScale, next.y*pixelScale, -halfDepth);
 
             // Add vertices
             vertices.add(v1);

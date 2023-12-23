@@ -14,14 +14,34 @@ import java.util.List;
 
 public class DeepTokenBuilder{
 
-    public static Geometry bufferedImageToGeometry(BufferedImage image, float imageDepth, AssetManager assetManager){
+    double edgeSimplificationEpsilon = 1;
 
-        AWTLoader loader=new AWTLoader();
+    float tokenDepth;
 
+    float tokenWidth;
+
+    /**
+     * @param tokenWidth The width of the token (height will be implicitly determined by the image)
+     * @param tokenDepth The thickness of the token
+     */
+    public DeepTokenBuilder(float tokenWidth, float tokenDepth){
+        this.tokenWidth = tokenWidth;
+        this.tokenDepth = tokenDepth;
+    }
+
+    /**
+     * The edgeSimplificationEpsilon is the maximum distance between the original edge and the simplified edge.
+     * the default of 1 is basically lossless (no more than 1 pixel) but can be increased to reduce the number of triangles.
+     */
+    public void setEdgeSimplificationEpsilon(double edgeSimplificationEpsilon){
+        this.edgeSimplificationEpsilon = edgeSimplificationEpsilon;
+    }
+
+    public Mesh bufferedImageToMesh(BufferedImage image){
         // Step 1: Determine the Perimeter
         List<Point> perimeter = MooreNeighbourhood.detectPerimeter(image);
 
-        List<Point> simplePerimeter = DouglasPeuckerLineSimplifier.simplify(perimeter, 1);
+        List<Point> simplePerimeter = DouglasPeuckerLineSimplifier.simplify(perimeter, edgeSimplificationEpsilon);
 
         //System.out.println(perimeter.size() + " -> " + simplePerimeter.size());
 
@@ -31,9 +51,15 @@ public class DeepTokenBuilder{
         // Step 3: Create a Custom Mesh
         float imageWidth = image.getWidth();
         float imageHeight = image.getHeight();
-        Mesh mesh = MeshBuilder.createCustomMesh(triangles, simplePerimeter, imageWidth, imageHeight, imageDepth);
+        return MeshBuilder.createCustomMesh(triangles, simplePerimeter, imageWidth, imageHeight, tokenWidth, tokenDepth);
+    }
+
+    public Geometry bufferedImageToUnshadedGeometry(BufferedImage image, AssetManager assetManager){
+
+        Mesh mesh = bufferedImageToMesh(image);
 
         // Convert BufferedImage to JME Texture
+        AWTLoader loader=new AWTLoader();
         Texture texture = new Texture2D(loader.load(image, true));
 
         // Create material and apply texture
