@@ -21,9 +21,9 @@ public class DeepTokenBuilder{
         // Step 1: Determine the Perimeter
         List<Point> perimeter = MooreNeighbourhood.detectPerimeter(image);
 
-        List<Point> simplePerimeter = DouglasPeuckerLineSimplifier.simplify(perimeter, 5);
+        List<Point> simplePerimeter = DouglasPeuckerLineSimplifier.simplify(perimeter, 1);
 
-        System.out.println(perimeter.size() + " -> " + simplePerimeter.size());
+        //System.out.println(perimeter.size() + " -> " + simplePerimeter.size());
 
         // Step 2: Triangulate the Perimeter
         List<Triangle> triangles = Triangulariser.triangulate(simplePerimeter);

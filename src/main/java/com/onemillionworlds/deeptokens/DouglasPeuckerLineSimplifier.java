@@ -8,12 +8,30 @@ public class DouglasPeuckerLineSimplifier{
 
 
     public static List<Point> simplify(List<Point> points, double epsilon) {
-        if (points.size() < 3) return points;
+        boolean[] keepPoints = new boolean[points.size()];
+        keepPoints[0] = true;
+        keepPoints[points.size() - 1] = true;
 
-        int index = -1;
-        double maxDistance = 0.0;
-        for (int i = 1; i < points.size() - 1; i++) {
-            double distance = distanceToLine(points.get(i),points.get(0), points.get(points.size() - 1));
+        simplifySection(points, 0, points.size() - 1, epsilon, keepPoints);
+
+        List<Point> simplified = new ArrayList<>();
+        for (int i = 0; i < points.size(); i++) {
+            if (keepPoints[i]) {
+                simplified.add(points.get(i));
+            }
+        }
+        return simplified;
+    }
+
+    private static void simplifySection(List<Point> points, int start, int end, double epsilon, boolean[] keepPoints) {
+        if (start + 1 == end) {
+            return;
+        }
+
+        double maxDistance = 0;
+        int index = start;
+        for (int i = start + 1; i < end; i++) {
+            double distance = distanceToLineApprox(points.get(i), points.get(start), points.get(end));
             if (distance > maxDistance) {
                 index = i;
                 maxDistance = distance;
@@ -21,25 +39,30 @@ public class DouglasPeuckerLineSimplifier{
         }
 
         if (maxDistance > epsilon) {
-            List<Point> leftList = simplify(points.subList(0, index + 1), epsilon);
-            List<Point> rightList = simplify(points.subList(index, points.size()), epsilon);
-
-            List<Point> result = new ArrayList<>(leftList);
-            result.remove(result.size() - 1); // remove the duplicate point
-            result.addAll(rightList);
-            return result;
-        } else {
-            List<Point> result = new ArrayList<>();
-            result.add(points.get(0));
-            result.add(points.get(points.size() - 1));
-            return result;
+            keepPoints[index] = true;
+            simplifySection(points, start, index, epsilon, keepPoints);
+            simplifySection(points, index, end, epsilon, keepPoints);
         }
     }
 
-    static double distanceToLine(Point testPoint, Point lineStart, Point lineEnd) {
+
+    static double distanceToLineApprox(Point testPoint, Point lineStart, Point lineEnd) {
         int x = testPoint.x;
         int y = testPoint.y;
-        double normalLength = Math.hypot(lineEnd.x - lineStart.x, lineEnd.y - lineStart.y);
+        double normalLength = approximateHypot(lineEnd.x - lineStart.x, lineEnd.y - lineStart.y);
         return Math.abs((x - lineStart.x) * (lineEnd.y - lineStart.y) - (y - lineStart.y) * (lineEnd.x - lineStart.x)) / normalLength;
     }
+
+    /**
+     * A faster (and more than accurate enough for our purposes) version of Math.hypot
+     * @return
+     */
+    public static double approximateHypot(double x, double y){
+        return approximateSquareRoot(x*x + y*y);
+    }
+
+    public static double approximateSquareRoot(double number) {
+        return Double.longBitsToDouble( ( ( Double.doubleToLongBits( number )-(1L <<52) )>>1 ) + (1L <<61 ) );
+    }
+
 }
