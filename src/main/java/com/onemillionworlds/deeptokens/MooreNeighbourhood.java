@@ -67,9 +67,10 @@ public class MooreNeighbourhood {
 
                     while (true) {
                         Point checkPosition = neighborhood.get(checkLocationNr - 1).apply(point);
-                        int newCheckLocationNr = checkLocationNrMap[checkLocationNr - 1];
 
                         if (pixels.contains(checkPosition) && !pixels.isTransparent(checkPosition.x, checkPosition.y)) {
+                            int newCheckLocationNr = checkLocationNrMap[checkLocationNr - 1];
+
                             if (checkPosition.equals(startPos)) {
                                 counter++;
                                 if (newCheckLocationNr == 1 || counter >= 3) {
@@ -86,7 +87,6 @@ public class MooreNeighbourhood {
                         } else {
                             checkLocationNr = 1 + (checkLocationNr % 8);
                             if (counter2 > 8) {
-                                counter2 = 0;
                                 break;
                             } else {
                                 counter2++;
@@ -96,7 +96,68 @@ public class MooreNeighbourhood {
                 }
             }
         }
+
+        for(List<Point> perimeter : lists){
+            correctChamferedCorners(perimeter, pixels);
+        }
+
         return lists;
+    }
+
+    /**
+     * This corrects the 1 pixel chamfered corners that are created by the Moore neighborhood algorithm. It does this by
+     * checking if a corner has been cut on an otherwise straight line, and if so, it inserts a new point into the perimeter.
+     *
+     * Theoretically the smoothing algorithm could take it back out again but it gives it a better starting shape so
+     * it's likely not to.
+     */
+    private static void correctChamferedCorners(List<Point> perimeter, Pixels pixels) {
+        // Iterate over the points in the perimeter list
+        int stopLength =  perimeter.size();
+        int originalSize = perimeter.size();
+        for (int i = 0; i < stopLength; i++) {
+            Point a = perimeter.get(i);
+            Point b = perimeter.get((i + 1) % perimeter.size());
+            Point c = perimeter.get((i + 2) % perimeter.size());
+            Point d = perimeter.get((i + 3) % perimeter.size());
+
+
+            boolean abHorizontal = a.y == b.y;
+            boolean cdHorizontal = c.y == d.y;
+
+            // Potential corner point (p)
+            Point p;
+
+            if (abHorizontal && !cdHorizontal) {
+                p = new Point(c.x, a.y);
+            } else if (!abHorizontal && cdHorizontal) {
+                p = new Point(a.x, c.y);
+            } else {
+                continue;
+            }
+
+            if (p.equals(b) || p.equals(c)) {
+                continue;
+            }
+
+            // Check if a-b and c-d form straight lines and meet at p
+            if (isStraightLine(a, b, p) && isStraightLine(c, d, p)) {
+                // Check if p is a non-transparent pixel
+                if (!pixels.isTransparent(p.x, p.y)) {
+                    // Insert p into the perimeter
+                    perimeter.add((i + 2) % perimeter.size(), p);
+                    i++; // Skip the next point as we just added a new point
+                    stopLength++;
+                }
+            }
+        }
+
+        System.out.println("added " + (perimeter.size() - originalSize) + " points");
+    }
+
+    private static boolean isStraightLine(Point a, Point b, Point p) {
+        // Check if a, b, and p are in a straight line (either horizontally or vertically)
+        return (a.x == b.x && b.x == p.x) || (a.y == b.y && b.y == p.y);
     }
 
     static class Pixels {
