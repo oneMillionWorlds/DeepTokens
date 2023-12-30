@@ -15,7 +15,7 @@ import java.util.List;
 
 public class DeepTokenBuilder{
 
-    double edgeSimplificationEpsilon = 1;
+    double edgeSimplificationEpsilon = 0.75;
 
     float tokenDepth;
 

@@ -10,6 +10,8 @@ public class Triangulariser{
         List<Triangle> triangles = new ArrayList<>();
         List<Point> remainingPoints = new ArrayList<>(perimeter);
 
+        System.out.println(remainingPoints);
+
         while (remainingPoints.size() > 3) {
             int size = remainingPoints.size();
             for (int i = 0; i < size; i++) {
@@ -53,7 +55,7 @@ public class Triangulariser{
         int ab = (a.x - p.x) * (b.y - a.y) - (a.y - p.y) * (b.x - a.x);
         int bc = (b.x - p.x) * (c.y - b.y) - (b.y - p.y) * (c.x - b.x);
         int ca = (c.x - p.x) * (a.y - c.y) - (c.y - p.y) * (a.x - c.x);
-        return (ab >= 0 && bc >= 0 && ca >= 0) || (ab <= 0 && bc <= 0 && ca <= 0);
+        return (ab > 0 && bc > 0 && ca > 0) || (ab < 0 && bc < 0 && ca < 0);
     }
 
     public static class TriangularisationFailureException extends RuntimeException {
