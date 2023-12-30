@@ -127,12 +127,25 @@ public class EdgeHoleMapper {
             Point holePoint = closestPoints.holePoint();
 
             // Intermediate points between edgePoint and holePoint
-            // Connect: edgePoint -> midPoint1 -> midPoint2 -> holePoints -> back to midPoint2 -> midPoint1 -> edgePoint
-            connection.add(edgePoint);
-            connection.add(holePoint);
-            connection.addAll(hole);
-            connection.add(holePoint);
-            connection.add(edgePoint);
+            Point midPoint1 = new Point((edgePoint.x + holePoint.x) / 2, edgePoint.y);
+            Point midPoint2 = new Point((edgePoint.x + holePoint.x) / 2, holePoint.y);
+
+            // Rearrange the hole points so that the hole starts and ends at the closest hole point
+            int holeStartIndex = hole.indexOf(holePoint);
+            List<Point> rearrangedHole = new ArrayList<>();
+            for (int i = holeStartIndex; i < hole.size(); i++) {
+                rearrangedHole.add(hole.get(i));
+            }
+            for (int i = 0; i < holeStartIndex; i++) {
+                rearrangedHole.add(hole.get(i));
+            }
+
+            // Connect: edgePoint -> midPoint1 -> midPoint2 -> rearrangedHolePoints -> back to midPoint2 -> midPoint1 -> edgePoint
+            connection.add(midPoint1);
+            connection.add(midPoint2);
+            connection.addAll(rearrangedHole);
+            connection.add(midPoint2);
+            connection.add(midPoint1);
 
             return connection;
         }
