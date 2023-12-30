@@ -32,7 +32,7 @@ public class DeepTokenBuilder{
 
     /**
      * The edgeSimplificationEpsilon is the maximum distance between the original edge and the simplified edge.
-     * the default of 1 is basically lossless (no more than 1 pixel) but can be increased to reduce the number of triangles.
+     * the default of 0.75 is basically lossless (no more than 1 pixel) but can be increased to reduce the number of triangles.
      */
     public void setEdgeSimplificationEpsilon(double edgeSimplificationEpsilon){
         this.edgeSimplificationEpsilon = edgeSimplificationEpsilon;
@@ -66,7 +66,7 @@ public class DeepTokenBuilder{
 
         // Convert BufferedImage to JME Texture
         AWTLoader loader=new AWTLoader();
-        Texture texture = new Texture2D(loader.load(image, true));
+        Texture texture = new Texture2D(loader.load(ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon)), false));
 
         // Create material and apply texture
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
@@ -78,5 +78,7 @@ public class DeepTokenBuilder{
 
         return geom;
     }
+
+
 
 }
