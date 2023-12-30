@@ -24,6 +24,10 @@ public class Triangulariser{
                     break;
                 }
             }
+            int afterLoopSize = remainingPoints.size();
+            if (size == afterLoopSize) {
+                throw new TriangularisationFailureException("Triangulation failed", remainingPoints);
+            }
         }
 
         // Add the last remaining triangle
