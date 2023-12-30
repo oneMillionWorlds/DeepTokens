@@ -233,12 +233,10 @@ public class MeshBuilder{
             Vector3f normalPrev = calculateNormal(prev, current);
             Vector3f normalNext = calculateNormal(current, next);
 
-            // Average of the two normals
-            Vector3f averageNormal = new Vector3f((normalPrev.x + normalNext.x) / 2f, (normalPrev.y + normalNext.y) / 2f, 0);
-            averageNormal.negateLocal();
+            double offStraightAngle = Math.abs(normalPrev.angleBetween(normalNext));
 
             // Check if the angle between the two normals is greater than the sharpness criteria
-            sharpPoints.add(averageNormal.angleBetween(normalPrev) > sharpnessCriteria);
+            sharpPoints.add(offStraightAngle > sharpnessCriteria);
         }
 
         return sharpPoints;
