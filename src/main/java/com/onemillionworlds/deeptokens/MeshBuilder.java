@@ -14,7 +14,7 @@ import java.util.List;
 public class MeshBuilder{
 
 
-    public static Mesh createCustomMesh(List<Triangle> triangles, List<List<Point>> edges, float imageWidthPixels, float imageHeightPixels, float objectWidth, float objectDepth) {
+    public static Mesh createCustomMesh(List<Triangle> triangles, List<List<Point>> edges, float imageWidthPixels, float imageHeightPixels, float objectWidth, float objectDepth, float minAngleToBecomeSharp) {
         float halfDepth = objectDepth / 2f;
         Mesh mesh = new Mesh();
 
@@ -32,7 +32,7 @@ public class MeshBuilder{
 
         // Add edge vertices, texture coords, and indices
         for(List<Point> edge : edges){
-            addEdges(edge, vertices, normals, texCoords, indices, halfDepth, imageWidthPixels, pixelScale, imageHeightPixels);
+            addEdges(edge, vertices, normals, texCoords, indices, halfDepth, imageWidthPixels, pixelScale, imageHeightPixels, minAngleToBecomeSharp);
         }
 
         // Convert lists to arrays
@@ -81,10 +81,11 @@ public class MeshBuilder{
         }
     }
 
-    private static void addEdges(List<Point> edges, List<Vector3f> vertices, List<Vector3f> normals, List<Vector2f> texCoords, List<Integer> indices, float halfDepth, float imageWidth, float pixelScale, float imageHeight) {
+    private static void addEdges(List<Point> edges, List<Vector3f> vertices, List<Vector3f> normals, List<Vector2f> texCoords, List<Integer> indices, float halfDepth, float imageWidth, float pixelScale, float imageHeight, float sharpnessAngle) {
         int startIdx = vertices.size();
 
         List<Vector3f> normalsForEdge = calculateOutwardNormals(edges);
+        List<Boolean> sharpPoints = calculateSharpPoint(edges, sharpnessAngle);
 
         for (int i = 0; i < edges.size(); i++) {
             Point current = edges.get(i);
@@ -102,10 +103,27 @@ public class MeshBuilder{
             vertices.add(v3);
             vertices.add(v4);
 
-            normals.add(normalsForEdge.get(i));
-            normals.add(normalsForEdge.get(i));
-            normals.add(normalsForEdge.get((i+1)% edges.size()));
-            normals.add(normalsForEdge.get((i+1)% edges.size()));
+            boolean startIsSharp = sharpPoints.get(i);
+            boolean endIsSharp = sharpPoints.get((i+1)% edges.size());
+
+            Vector3f normalFaceNormal = startIsSharp||endIsSharp ? v3.subtract(v1).cross(v2.subtract(v1)).normalize() : null;
+
+
+            if (startIsSharp){
+                normals.add(normalFaceNormal);
+                normals.add(normalFaceNormal);
+
+            }else {
+                normals.add(normalsForEdge.get(i));
+                normals.add(normalsForEdge.get(i));
+            }
+            if (endIsSharp){
+                normals.add(normalFaceNormal);
+                normals.add(normalFaceNormal);
+            }else {
+                normals.add(normalsForEdge.get((i+1)% edges.size()));
+                normals.add(normalsForEdge.get((i+1)% edges.size()));
+            }
 
             // Texture coordinates for the edge based on the last pixel color
             Vector2f texCoord1 = new Vector2f(current.x / imageWidth, current.y / imageHeight);
@@ -201,6 +219,30 @@ public class MeshBuilder{
         }
 
         return normals;
+    }
+
+    public static List<Boolean> calculateSharpPoint(List<Point> edges, float sharpnessCriteria) {
+        List<Boolean> sharpPoints = new ArrayList<>();
+        int size = edges.size();
+
+        for (int i = 0; i < size; i++) {
+            Point current = edges.get(i);
+            Point prev = edges.get(i > 0 ? i - 1 : size - 1);
+            Point next = edges.get((i + 1) % size);
+
+            Vector3f normalPrev = calculateNormal(prev, current);
+            Vector3f normalNext = calculateNormal(current, next);
+
+            // Average of the two normals
+            Vector3f averageNormal = new Vector3f((normalPrev.x + normalNext.x) / 2f, (normalPrev.y + normalNext.y) / 2f, 0);
+            averageNormal.negateLocal();
+
+            // Check if the angle between the two normals is greater than the sharpness criteria
+            sharpPoints.add(averageNormal.angleBetween(normalPrev) > sharpnessCriteria);
+        }
+
+        return sharpPoints;
+
     }
 
     private static Vector3f calculateNormal(Point from, Point to) {

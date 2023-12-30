@@ -15,7 +15,9 @@ import java.util.List;
 
 public class DeepTokenBuilder{
 
-    double edgeSimplificationEpsilon = 0.75;
+    double edgeSimplificationEpsilon = 1;
+
+    float minimumSharpAngle = (float)Math.toRadians(30);
 
     float tokenDepth;
 
@@ -38,6 +40,14 @@ public class DeepTokenBuilder{
         this.edgeSimplificationEpsilon = edgeSimplificationEpsilon;
     }
 
+    /**
+     * The minimumSharpAngle is the minimum angle between two adjacent edge points that will be considered a sharp edge.
+     * This affects the normals that are generated (either smoothly changing or sharp).
+     */
+    public void setMinimumSharpAngle(float minimumSharpAngle){
+        this.minimumSharpAngle = minimumSharpAngle;
+    }
+
     public Mesh bufferedImageToMesh(BufferedImage image){
         // Step 1: Determine the Perimeter
         List<List<Point>> perimeters = MooreNeighbourhood.detectPerimeter(image);
@@ -57,7 +67,7 @@ public class DeepTokenBuilder{
         // Step 3: Create a Custom Mesh
         float imageWidth = image.getWidth();
         float imageHeight = image.getHeight();
-        return MeshBuilder.createCustomMesh(triangles, simplePerimeters, imageWidth, imageHeight, tokenWidth, tokenDepth);
+        return MeshBuilder.createCustomMesh(triangles, simplePerimeters, imageWidth, imageHeight, tokenWidth, tokenDepth, minimumSharpAngle);
     }
 
     public Geometry bufferedImageToUnshadedGeometry(BufferedImage image, AssetManager assetManager){
