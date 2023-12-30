@@ -14,7 +14,7 @@ import java.util.List;
 public class MeshBuilder{
 
 
-    public static Mesh createCustomMesh(List<Triangle> triangles, List<Point> edges, float imageWidthPixels, float imageHeightPixels, float objectWidth, float objectDepth) {
+    public static Mesh createCustomMesh(List<Triangle> triangles, List<List<Point>> edges, float imageWidthPixels, float imageHeightPixels, float objectWidth, float objectDepth) {
         float halfDepth = objectDepth / 2f;
         Mesh mesh = new Mesh();
 
@@ -30,7 +30,9 @@ public class MeshBuilder{
         addFace(triangles, vertices, texCoords, indices, -halfDepth, imageWidthPixels, imageHeightPixels, pixelScale, false); // lower face
 
         // Add edge vertices, texture coords, and indices
-        addEdges(edges, vertices, texCoords, indices, halfDepth, imageWidthPixels, pixelScale, imageHeightPixels);
+        for(List<Point> edge : edges){
+            addEdges(edge, vertices, texCoords, indices, halfDepth, imageWidthPixels, pixelScale, imageHeightPixels);
+        }
 
         // Convert lists to arrays
         int[] indicesArray = indices.stream().mapToInt(i -> i).toArray();

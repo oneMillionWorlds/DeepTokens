@@ -10,6 +10,7 @@ import com.jme3.texture.plugins.AWTLoader;
 
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DeepTokenBuilder{
@@ -39,19 +40,24 @@ public class DeepTokenBuilder{
 
     public Mesh bufferedImageToMesh(BufferedImage image){
         // Step 1: Determine the Perimeter
-        List<Point> perimeter = MooreNeighbourhood.detectPerimeter(image);
+        List<List<Point>> perimeters = MooreNeighbourhood.detectPerimeter(image);
 
-        List<Point> simplePerimeter = DouglasPeuckerLineSimplifier.simplify(perimeter, edgeSimplificationEpsilon);
+        List<List<Point>> simplePerimeters = DouglasPeuckerLineSimplifier.simplifyAll(perimeters, edgeSimplificationEpsilon);
 
-        //System.out.println(perimeter.size() + " -> " + simplePerimeter.size());
+        EdgeAndHoleSeparator.EdgesAndHoles edgesAndHoles = EdgeAndHoleSeparator.separatePerimeters(simplePerimeters);
 
-        // Step 2: Triangulate the Perimeter
-        List<Triangle> triangles = Triangulariser.triangulate(simplePerimeter);
+        List<EdgeHoleMapper.EdgeWithContainedHoles> edgeWithContainedHoles = EdgeHoleMapper.mapHolesToEdges(edgesAndHoles.edges(), edgesAndHoles.holes());
+
+        List<Triangle> triangles = new ArrayList<>();
+
+        for(EdgeHoleMapper.EdgeWithContainedHoles perimeter : edgeWithContainedHoles){
+            triangles.addAll(Triangulariser.triangulate(perimeter.asSinglePerimeter()));
+        }
 
         // Step 3: Create a Custom Mesh
         float imageWidth = image.getWidth();
         float imageHeight = image.getHeight();
-        return MeshBuilder.createCustomMesh(triangles, simplePerimeter, imageWidth, imageHeight, tokenWidth, tokenDepth);
+        return MeshBuilder.createCustomMesh(triangles, simplePerimeters, imageWidth, imageHeight, tokenWidth, tokenDepth);
     }
 
     public Geometry bufferedImageToUnshadedGeometry(BufferedImage image, AssetManager assetManager){

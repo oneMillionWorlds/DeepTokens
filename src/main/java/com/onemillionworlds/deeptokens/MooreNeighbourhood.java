@@ -2,21 +2,30 @@ package com.onemillionworlds.deeptokens;
 
 import java.awt.Point;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.Function;
 
 public class MooreNeighbourhood {
 
-    static List<Point> detectPerimeter(BufferedImage bufferedImage) {
+    /**
+     * Outputs the edges and holes of the given image. Note that the outer edges are wound anticlockwise, and the holes are wound clockwise.
+     */
+    static List<List<Point>> detectPerimeter(BufferedImage bufferedImage) {
         return detectPerimeter(new Pixels(bufferedImage));
     }
 
-    static List<Point> detectPerimeter(Pixels pixels) {
+    /**
+     * Outputs the edges and holes of the given image. Note that the outer edges are wound anticlockwise, and the holes are wound clockwise.
+     */
+    static List<List<Point>> detectPerimeter(Pixels pixels) {
         int width = pixels.size.width;
         int height = pixels.size.height;
+        HashSet<Point> found = new HashSet<>();
         List<Point> list;
+        List<List<Point>> lists = new ArrayList<>();
+        boolean inside = false;
 
         List<Function<Point, Point>> neighborhood = List.of(
                 point -> new Point(point.x - 1, point.y),
@@ -33,9 +42,23 @@ public class MooreNeighbourhood {
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 Point point = new Point(x, y);
+                if (found.contains(point) && !inside) {
+                    inside = true;
+                    continue;
+                }
                 boolean isTransparent = pixels.isTransparent(x, y);
+                if (!isTransparent && inside) {
+                    continue;
+                }
+                if (isTransparent && inside) {
+                    inside = false;
+                    continue;
+                }
                 if (!isTransparent) {
                     list = new ArrayList<>();
+                    lists.add(list);
+
+                    found.add(point);
                     list.add(point);
                     int checkLocationNr = 1;
                     Point startPos = point;
@@ -50,18 +73,21 @@ public class MooreNeighbourhood {
                             if (checkPosition.equals(startPos)) {
                                 counter++;
                                 if (newCheckLocationNr == 1 || counter >= 3) {
-                                    return list;
+                                    inside = true;
+                                    break;
                                 }
                             }
 
                             checkLocationNr = newCheckLocationNr;
                             point = checkPosition;
                             counter2 = 0;
+                            found.add(point);
                             list.add(point);
                         } else {
                             checkLocationNr = 1 + (checkLocationNr % 8);
                             if (counter2 > 8) {
-                                return list;
+                                counter2 = 0;
+                                break;
                             } else {
                                 counter2++;
                             }
@@ -70,7 +96,7 @@ public class MooreNeighbourhood {
                 }
             }
         }
-        throw new RuntimeException("No perimeter found");
+        return lists;
     }
 
     static class Pixels {

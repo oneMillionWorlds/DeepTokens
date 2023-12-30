@@ -52,4 +52,16 @@ public class Triangulariser{
         return (ab >= 0 && bc >= 0 && ca >= 0) || (ab <= 0 && bc <= 0 && ca <= 0);
     }
 
+    public static class TriangularisationFailureException extends RuntimeException {
+        List<Point> points;
+        public TriangularisationFailureException(String message, List<Point> points) {
+            super(message + " " + points);
+            this.points = points;
+        }
+
+        public List<Point> getPoints(){
+            return points;
+        }
+    }
+
 }

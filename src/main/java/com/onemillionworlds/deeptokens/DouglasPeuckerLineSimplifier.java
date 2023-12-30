@@ -7,6 +7,19 @@ import java.util.List;
 public class DouglasPeuckerLineSimplifier{
 
 
+    public static List<List<Point>> simplifyAll(List<List<Point>> points, double epsilon) {
+        List<List<Point>> simplifieds = new ArrayList<>();
+        for (List<Point> list : points) {
+
+            List<Point> simplified = simplify(list, epsilon);
+
+            if (simplified.size()>3){ //get rid of tiny perimeters (probably forgotten pixels)
+                simplifieds.add(simplified);
+            }
+        }
+        return simplifieds;
+    }
+
     public static List<Point> simplify(List<Point> points, double epsilon) {
         boolean[] keepPoints = new boolean[points.size()];
         keepPoints[0] = true;
