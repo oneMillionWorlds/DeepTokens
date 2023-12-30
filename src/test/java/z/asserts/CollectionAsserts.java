@@ -22,7 +22,7 @@ public class CollectionAsserts{
 
         String message = "";
         if (!extra.isEmpty()){
-            message+="Contained extra [" + extra + "] but shouldn't have.";
+            message+="Contained extra [" + extra + "] but shouldn't have. ";
         }
 
         if (!missing.isEmpty()){
@@ -34,9 +34,9 @@ public class CollectionAsserts{
         assertEquals(expected.size(), actual.size(), "Although they contained the same contents they were different sizes (so had duplicates), dups: " + countDuplicates(actual));
     }
 
-    private static Map<Object,Integer> countDuplicates(Collection<?> expected){
+    private static Map<Object,Integer> countDuplicates(Collection<?> actual){
         Map<Object,Integer> count = new HashMap<>();
-        for(Object o: expected ){
+        for(Object o: actual ){
             count.put(o, count.getOrDefault(o, 0)+1);
         }
         

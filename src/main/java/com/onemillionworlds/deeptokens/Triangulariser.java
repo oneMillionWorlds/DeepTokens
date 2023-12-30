@@ -10,7 +10,9 @@ public class Triangulariser{
         List<Triangle> triangles = new ArrayList<>();
         List<Point> remainingPoints = new ArrayList<>(perimeter);
 
-        System.out.println(remainingPoints);
+        System.out.println(TriangularisationFailureException.pointsToString(remainingPoints));
+
+        System.out.println("Triangulating " + remainingPoints.size() + " points");
 
         while (remainingPoints.size() > 3) {
             int size = remainingPoints.size();
@@ -21,7 +23,7 @@ public class Triangulariser{
 
                 if (isConvex(prev, curr, next) && noPointsInside(remainingPoints, prev, curr, next)) {
                      triangles.add(new Triangle(prev, curr, next));
-
+                    System.out.println("removing: " + curr );
                     remainingPoints.remove(i);
                     break;
                 }
@@ -55,18 +57,38 @@ public class Triangulariser{
         int ab = (a.x - p.x) * (b.y - a.y) - (a.y - p.y) * (b.x - a.x);
         int bc = (b.x - p.x) * (c.y - b.y) - (b.y - p.y) * (c.x - b.x);
         int ca = (c.x - p.x) * (a.y - c.y) - (c.y - p.y) * (a.x - c.x);
-        return (ab > 0 && bc > 0 && ca > 0) || (ab < 0 && bc < 0 && ca < 0);
+        return (ab >= 0 && bc >= 0 && ca >= 0) || (ab <= 0 && bc <= 0 && ca <= 0);
+    }
+
+    /**
+     * To generate the holes we create extra points equal to the other points. The triangluration algorithm needs
+     * to be told not to worry about these points and consider them "outside" the triangle being built
+     */
+    private static boolean isPointVertexOfTriangle(Point p, Point a, Point b, Point c) {
+        return p.equals(a) || p.equals(b) || p.equals(c);
     }
 
     public static class TriangularisationFailureException extends RuntimeException {
         List<Point> points;
         public TriangularisationFailureException(String message, List<Point> points) {
-            super(message + " " + points);
+            super(message + "\n" + pointsToString(points));
             this.points = points;
         }
 
         public List<Point> getPoints(){
             return points;
+        }
+
+        public String getPointsAsString(){
+            return pointsToString(points);
+        }
+
+        public static String pointsToString(List<Point> points){
+            StringBuilder sb = new StringBuilder();
+            for(Point p:points){
+                sb.append(p.x).append(",").append(p.y).append("\n");
+            }
+            return sb.toString();
         }
     }
 

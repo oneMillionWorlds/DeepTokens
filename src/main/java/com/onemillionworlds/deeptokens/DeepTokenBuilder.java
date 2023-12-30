@@ -54,6 +54,12 @@ public class DeepTokenBuilder{
 
         List<List<Point>> simplePerimeters = DouglasPeuckerLineSimplifier.simplifyAll(perimeters, edgeSimplificationEpsilon);
 
+        System.out.println("Perimeters:");
+        for(List<Point> perimeter : simplePerimeters){
+            System.out.println(pointsToString(perimeter));
+            System.out.println("-----------");
+        }
+        System.out.println("=========");
         EdgeAndHoleSeparator.EdgesAndHoles edgesAndHoles = EdgeAndHoleSeparator.separatePerimeters(simplePerimeters);
 
         List<EdgeHoleMapper.EdgeWithContainedHoles> edgeWithContainedHoles = EdgeHoleMapper.mapHolesToEdges(edgesAndHoles.edges(), edgesAndHoles.holes());
@@ -68,6 +74,14 @@ public class DeepTokenBuilder{
         float imageWidth = image.getWidth();
         float imageHeight = image.getHeight();
         return MeshBuilder.createCustomMesh(triangles, simplePerimeters, imageWidth, imageHeight, tokenWidth, tokenDepth, minimumSharpAngle);
+    }
+
+    public static String pointsToString(List<Point> points){
+        StringBuilder sb = new StringBuilder();
+        for(Point p:points){
+            sb.append(p.x).append(",").append(p.y).append("\n");
+        }
+        return sb.toString();
     }
 
     public Geometry bufferedImageToUnshadedGeometry(BufferedImage image, AssetManager assetManager){

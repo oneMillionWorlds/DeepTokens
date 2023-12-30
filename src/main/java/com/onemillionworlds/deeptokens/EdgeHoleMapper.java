@@ -139,10 +139,6 @@ public class EdgeHoleMapper {
             for (int i = 0; i < holeStartIndex; i++) {
                 rearrangedHole.add(hole.get(i));
             }
-
-            // Connect: edgePoint -> midPoint1 -> midPoint2 -> rearrangedHolePoints -> back to midPoint2 -> midPoint1 -> edgePoint
-            connection.add(edgePoint);
-            connection.add(holePoint);
             connection.addAll(rearrangedHole);
             connection.add(holePoint);
             connection.add(edgePoint);

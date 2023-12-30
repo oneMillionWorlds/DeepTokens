@@ -62,7 +62,6 @@ public class MooreNeighbourhood {
                     list.add(point);
                     int checkLocationNr = 1;
                     Point startPos = point;
-                    int counter = 0;
                     int counter2 = 0;
 
                     while (true) {
@@ -72,11 +71,8 @@ public class MooreNeighbourhood {
                             int newCheckLocationNr = checkLocationNrMap[checkLocationNr - 1];
 
                             if (checkPosition.equals(startPos)) {
-                                counter++;
-                                if (newCheckLocationNr == 1 || counter >= 3) {
                                     inside = true;
                                     break;
-                                }
                             }
 
                             checkLocationNr = newCheckLocationNr;
