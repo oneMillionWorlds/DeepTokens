@@ -1,11 +1,14 @@
 package com.onemillionworlds.deeptokens;
 
 import org.junit.jupiter.api.Test;
+import z.asserts.CollectionAsserts;
 
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class EdgeDeterminerTest{
 
@@ -31,7 +34,8 @@ class EdgeDeterminerTest{
                 new Point(1, 2)
             );
 
-        //CollectionAsserts.assertEqualContents(expectedEdgePoints, edgePoints);
+        assertEquals(1, edgePoints.size());
+        CollectionAsserts.assertEqualContents(expectedEdgePoints, edgePoints.get(0));
     }
 
     public BufferedImage transparentImage(int width, int height){
