@@ -66,7 +66,7 @@ public class DeepTokenBuilder{
 
         // Convert BufferedImage to JME Texture
         AWTLoader loader=new AWTLoader();
-        Texture texture = imageToTexture(image, assetManager);
+        Texture texture = imageToTexture(image);
 
         // Create material and apply texture
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
@@ -85,7 +85,7 @@ public class DeepTokenBuilder{
 
         // Convert BufferedImage to JME Texture
         AWTLoader loader=new AWTLoader();
-        Texture texture = imageToTexture(image, assetManager);
+        Texture texture = imageToTexture(image);
 
         // Create material and apply texture
         Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
@@ -98,7 +98,7 @@ public class DeepTokenBuilder{
         return geom;
     }
 
-    Texture imageToTexture(BufferedImage image, AssetManager assetManager){
+    Texture imageToTexture(BufferedImage image){
         AWTLoader loader=new AWTLoader();
         return new Texture2D(loader.load(ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon)), false));
     }

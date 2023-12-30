@@ -196,6 +196,7 @@ public class MeshBuilder{
 
             // Average of the two normals
             Vector3f averageNormal = new Vector3f((normalPrev.x + normalNext.x) / 2f, (normalPrev.y + normalNext.y) / 2f, 0);
+            averageNormal.negateLocal();
             normals.add(averageNormal);
         }
 
