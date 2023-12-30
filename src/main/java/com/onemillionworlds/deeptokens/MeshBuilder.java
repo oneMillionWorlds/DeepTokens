@@ -22,16 +22,17 @@ public class MeshBuilder{
 
         // Initialize lists for vertices, texture coordinates, and indices
         List<Vector3f> vertices = new ArrayList<>();
+        List<Vector3f> normals = new ArrayList<>();
         List<Vector2f> texCoords = new ArrayList<>();
         List<Integer> indices = new ArrayList<>();
 
         // Add upper and lower face vertices, texture coords, and indices
-        addFace(triangles, vertices, texCoords, indices, halfDepth, imageWidthPixels, imageHeightPixels, pixelScale, true); // upper face
-        addFace(triangles, vertices, texCoords, indices, -halfDepth, imageWidthPixels, imageHeightPixels, pixelScale, false); // lower face
+        addFace(triangles, vertices, normals, texCoords, indices, halfDepth, imageWidthPixels, imageHeightPixels, pixelScale, true); // upper face
+        addFace(triangles, vertices, normals, texCoords, indices, -halfDepth, imageWidthPixels, imageHeightPixels, pixelScale, false); // lower face
 
         // Add edge vertices, texture coords, and indices
         for(List<Point> edge : edges){
-            addEdges(edge, vertices, texCoords, indices, halfDepth, imageWidthPixels, pixelScale, imageHeightPixels);
+            addEdges(edge, vertices, normals, texCoords, indices, halfDepth, imageWidthPixels, pixelScale, imageHeightPixels);
         }
 
         // Convert lists to arrays
@@ -39,6 +40,7 @@ public class MeshBuilder{
 
         // Set mesh buffers
         mesh.setBuffer(VertexBuffer.Type.Position, 3, createFloatBufferVector3(vertices));
+        mesh.setBuffer(VertexBuffer.Type.Normal, 3, createFloatBufferVector3(normals));
         mesh.setBuffer(VertexBuffer.Type.TexCoord, 2, createFloatBufferVector2(texCoords));
         mesh.setBuffer(VertexBuffer.Type.Index, 1, BufferUtils.createIntBuffer(indicesArray));
         mesh.updateBound();
@@ -46,13 +48,18 @@ public class MeshBuilder{
         return mesh;
     }
 
-    private static void addFace(List<Triangle> triangles, List<Vector3f> vertices, List<Vector2f> texCoords, List<Integer> indices, float z, float imageWidth, float imageHeight, float pixelScale, boolean isUpper) {
+    private static void addFace(List<Triangle> triangles, List<Vector3f> vertices, List<Vector3f> normals, List<Vector2f> texCoords, List<Integer> indices, float z, float imageWidth, float imageHeight, float pixelScale, boolean isUpper) {
         int startIdx = vertices.size();
+        Vector3f normal = new Vector3f(0, 0, isUpper ? 1 : -1);
         for (Triangle t : triangles) {
             // Add vertices
             vertices.add(new Vector3f(t.a().x*pixelScale, t.a().y*pixelScale, z));
             vertices.add(new Vector3f(t.b().x*pixelScale, t.b().y*pixelScale, z));
             vertices.add(new Vector3f(t.c().x*pixelScale, t.c().y*pixelScale, z));
+
+            normals.add(normal);
+            normals.add(normal);
+            normals.add(normal);
 
             // Add texture coordinates
             texCoords.add(new Vector2f(t.a().x / imageWidth, t.a().y / imageHeight));
@@ -74,8 +81,10 @@ public class MeshBuilder{
         }
     }
 
-    private static void addEdges(List<Point> edges, List<Vector3f> vertices, List<Vector2f> texCoords, List<Integer> indices, float halfDepth, float imageWidth, float pixelScale, float imageHeight) {
+    private static void addEdges(List<Point> edges, List<Vector3f> vertices, List<Vector3f> normals, List<Vector2f> texCoords, List<Integer> indices, float halfDepth, float imageWidth, float pixelScale, float imageHeight) {
         int startIdx = vertices.size();
+
+        List<Vector3f> normalsForEdge = calculateOutwardNormals(edges);
 
         for (int i = 0; i < edges.size(); i++) {
             Point current = edges.get(i);
@@ -92,6 +101,11 @@ public class MeshBuilder{
             vertices.add(v2);
             vertices.add(v3);
             vertices.add(v4);
+
+            normals.add(normalsForEdge.get(i));
+            normals.add(normalsForEdge.get(i));
+            normals.add(normalsForEdge.get((i+1)% edges.size()));
+            normals.add(normalsForEdge.get((i+1)% edges.size()));
 
             // Texture coordinates for the edge based on the last pixel color
             Vector2f texCoord1 = new Vector2f(current.x / imageWidth, current.y / imageHeight);
@@ -166,5 +180,34 @@ public class MeshBuilder{
         }
         buff.flip();
         return buff;
+    }
+
+    public static List<Vector3f> calculateOutwardNormals(List<Point> edges) {
+        List<Vector3f> normals = new ArrayList<>();
+        int size = edges.size();
+
+        for (int i = 0; i < size; i++) {
+            Point current = edges.get(i);
+            Point prev = edges.get(i > 0 ? i - 1 : size - 1);
+            Point next = edges.get((i + 1) % size);
+
+            Vector3f normalPrev = calculateNormal(prev, current);
+            Vector3f normalNext = calculateNormal(current, next);
+
+            // Average of the two normals
+            Vector3f averageNormal = new Vector3f((normalPrev.x + normalNext.x) / 2f, (normalPrev.y + normalNext.y) / 2f, 0);
+            normals.add(averageNormal);
+        }
+
+        return normals;
+    }
+
+    private static Vector3f calculateNormal(Point from, Point to) {
+        // Normal calculation for a segment
+        float dx = to.x - from.x;
+        float dy = to.y - from.y;
+
+        // Perpendicular in 2D (swap and negate one component)
+        return new Vector3f(-dy, dx, 0).normalizeLocal();
     }
 }

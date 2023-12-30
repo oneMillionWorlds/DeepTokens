@@ -151,8 +151,6 @@ public class MooreNeighbourhood {
                 }
             }
         }
-
-        System.out.println("added " + (perimeter.size() - originalSize) + " points");
     }
 
     private static boolean isStraightLine(Point a, Point b, Point p) {

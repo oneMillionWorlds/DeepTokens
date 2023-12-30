@@ -18,6 +18,10 @@ public class EdgeHoleMapper {
     public static List<EdgeWithContainedHoles> mapHolesToEdges(List<List<Point>> edges, List<List<Point>> holes) {
         Map<List<Point>, List<List<Point>>> edgeToHolesMap = new HashMap<>();
 
+        for(List<Point> edge : edges){
+            edgeToHolesMap.put(edge, new ArrayList<>());
+        }
+
         for (List<Point> hole : holes) {
             List<Point> smallestContainingEdge = null;
             double smallestArea = Double.MAX_VALUE;
@@ -33,7 +37,7 @@ public class EdgeHoleMapper {
             }
 
             if (smallestContainingEdge != null) {
-                edgeToHolesMap.computeIfAbsent(smallestContainingEdge, k -> new ArrayList<>()).add(hole);
+                edgeToHolesMap.get(smallestContainingEdge).add(hole);
             }
         }
 
