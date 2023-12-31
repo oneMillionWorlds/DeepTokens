@@ -1,12 +1,7 @@
 package com.onemillionworlds.deeptokens;
 
-import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.Raster;
-import java.io.File;
-import java.io.IOException;
 
 /**
  * This gives the image an expanded "fuzzy edge". This is useful in case the simplification process leads to the shape
@@ -37,16 +32,6 @@ public class ImageEdgeExpander{
             }
         }
 
-        /*
-        File outputfile = new File("C:\\Users\\richa\\Downloads\\DeepTokenImages\\image.jpg");
-        try{
-            ImageIO.write(newImage, "png", outputfile);
-        } catch(IOException e){
-            throw new RuntimeException(e);
-        }
-        */
-
-
         return newImage;
     }
 
@@ -59,7 +44,7 @@ public class ImageEdgeExpander{
                 int ny = y + dy;
 
                 if (nx >= 0 && ny >= 0 && nx < width && ny < height) {
-                    int pixel = pixels[x + y*width];
+                    int pixel = pixels[nx + ny*width];
                     int alpha = (pixel >> 24) & 0xff;
 
                     if (alpha != 0) { // Not transparent
