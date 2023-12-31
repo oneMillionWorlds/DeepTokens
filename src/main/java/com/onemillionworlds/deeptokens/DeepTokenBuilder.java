@@ -199,7 +199,7 @@ public class DeepTokenBuilder{
         return geom;
     }
 
-    Texture imageToTexture(BufferedImage image){
+    public Texture imageToTexture(BufferedImage image){
         AWTLoader loader=new AWTLoader();
         return new Texture2D(loader.load(ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon)+1), flipY));
     }
