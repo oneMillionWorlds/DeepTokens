@@ -72,8 +72,6 @@ publishing { //see https://docs.gradle.org/current/userguide/publishing_maven.ht
                     }
                 }
             }
-
-            artifact sourcesJar
         }
     }
     repositories {
