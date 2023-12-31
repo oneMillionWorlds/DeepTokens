@@ -1,6 +1,28 @@
 # DeepTokens
 A jmonkey library to make 2D images kind of 3D
 
+![An image of a thickened sun and cloud image](readmeResources/cloudAndSun.png)
+
+## Getting started
+
+Create a DeepTokenBuilder and specify its width and depth (height is implicit from the image shape)
+
+    DeepTokenBuilder deepTokenBuilder = new DeepTokenBuilder(1, 0.1f);
+
+Load an image
+
+    BufferedImage tokenImage = ImageIO.read(TestApplication.class.getResourceAsStream("/pathToImage.png"));
+
+Request this be turned into a deep token
+
+    Geometry deepToken = deepTokenBuilder.bufferedImageToLitGeometry(tokenImage);
+
+Or just get the mesh and texture and put it together yourself (if you want to use an unusual material)
+
+    Mesh mesh = deepTokenBuilder.bufferedImageToMesh(tokenImage);
+    Texture texture = deepTokenBuilder.imageToTexture(tokenImage);
+
+(Note that the imageToTexture adds a margin on the image in case a simplification of the edge means the shape "slips off the edge")
 
 ## Attribution and licensing
 
