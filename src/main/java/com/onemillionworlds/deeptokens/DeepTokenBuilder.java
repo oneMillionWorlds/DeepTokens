@@ -9,7 +9,9 @@ import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 import com.jme3.texture.plugins.AWTLoader;
 
+import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,8 @@ public class DeepTokenBuilder{
     private final float tokenDepth;
 
     private final float tokenWidth;
+
+    private boolean flipY = true;
 
     /**
      * @param tokenWidth The width of the token (height will be implicitly determined by the image)
@@ -54,6 +58,7 @@ public class DeepTokenBuilder{
         this.minimumSharpAngle = minimumSharpAngle;
     }
 
+
     /**
      * By default, the edge is the same colour as the last pixel of the image. But you can tint it if you want; e.g. make
      * it a little darker or lighter than the image.
@@ -62,7 +67,41 @@ public class DeepTokenBuilder{
         this.edgeTint = Optional.ofNullable(edgeTint);
     }
 
+    /**
+     * Usually images have an opposite definition of Y to JME. This will flip the image vertically which is the default and
+     * usually what you want. But if you have already flipped the image yourself, you can set this to false.
+     * @param flipY
+     */
+    public void setFlipY(boolean flipY){
+        this.flipY = flipY;
+    }
+
+    private static BufferedImage createFlipped(BufferedImage image)
+    {
+        AffineTransform at = new AffineTransform();
+        at.concatenate(AffineTransform.getScaleInstance(1, -1));
+        at.concatenate(AffineTransform.getTranslateInstance(0, -image.getHeight()));
+        return createTransformed(image, at);
+    }
+
+    private static BufferedImage createTransformed(
+            BufferedImage image, AffineTransform at)
+    {
+        BufferedImage newImage = new BufferedImage(
+                image.getWidth(), image.getHeight(),
+                BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = newImage.createGraphics();
+        g.transform(at);
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+        return newImage;
+    }
+
     public Mesh bufferedImageToMesh(BufferedImage image){
+        if (flipY) {
+            image = createFlipped(image);
+        }
+
         // Step 1: Determine the Perimeter
         List<List<Point>> perimeters = MooreNeighbourhood.detectPerimeter(image);
 
@@ -131,7 +170,7 @@ public class DeepTokenBuilder{
 
     Texture imageToTexture(BufferedImage image){
         AWTLoader loader=new AWTLoader();
-        return new Texture2D(loader.load(ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon)), false));
+        return new Texture2D(loader.load(ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon)), flipY));
     }
 
 }
