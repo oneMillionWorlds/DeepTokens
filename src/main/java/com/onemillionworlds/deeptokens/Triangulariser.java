@@ -71,7 +71,7 @@ public class Triangulariser{
     public static class TriangularisationFailureException extends RuntimeException {
         List<Point> points;
         public TriangularisationFailureException(String message, List<Point> points) {
-            super(message + "\n" + pointsToString(points));
+            super(message + ". Do you have single pixel wide regions? Problematic points were (remember y may be flipped): \n. " + pointsToString(points));
             this.points = points;
         }
 
