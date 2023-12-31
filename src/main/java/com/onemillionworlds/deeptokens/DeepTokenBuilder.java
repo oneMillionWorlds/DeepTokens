@@ -17,6 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * The main class, used to take BufferedImages as an input and produce a JME Mesh as an output.
+ */
 public class DeepTokenBuilder{
 
     private Optional<ColorRGBA> edgeTint = Optional.empty();
@@ -97,12 +100,24 @@ public class DeepTokenBuilder{
         return newImage;
     }
 
+    /**
+     * Creates a mesh from a BufferedImage.
+     * <p>
+     * There are very few restrictions on the image (e.g. it can be concave, have holes, etc) but it must not have any
+     * single pixel wide regions (thin hairs). These will lead to triangulisation failures.
+     * </p>
+     * <p>
+     *     This is the lowest level call, allowing user code to create a mesh and then do whatever they want with it. This
+     *     method is appropriate if you want to apply your own material to the mesh, rather than use the default ones that
+     *     DeepTokens can directly build.
+     * </p>
+     *
+     */
     public Mesh bufferedImageToMesh(BufferedImage image){
         if (flipY) {
             image = createFlipped(image);
         }
 
-        // Step 1: Determine the Perimeter
         List<List<Point>> perimeters = MooreNeighbourhood.detectPerimeter(image);
 
         List<List<Point>> simplePerimeters = DouglasPeuckerLineSimplifier.simplifyAll(perimeters, edgeSimplificationEpsilon);
@@ -124,6 +139,14 @@ public class DeepTokenBuilder{
     }
 
 
+    /**
+     * Creates an unshaded geometry from a BufferedImage.
+     * <p>
+     * There are very few restrictions on the image (e.g. it can be concave, have holes, etc) but it must not have any
+     * single pixel wide regions (thin hairs). These will lead to triangulisation failures.
+     * </p>
+     *
+     */
     public Geometry bufferedImageToUnshadedGeometry(BufferedImage image, AssetManager assetManager){
 
         Mesh mesh = bufferedImageToMesh(image);
@@ -146,6 +169,14 @@ public class DeepTokenBuilder{
         return geom;
     }
 
+    /**
+     * Creates a lit geometry from a BufferedImage (i.e. one intended for a scene with light).
+     * <p>
+     * There are very few restrictions on the image (e.g. it can be concave, have holes, etc) but it must not have any
+     * single pixel wide regions (thin hairs). These will lead to triangulisation failures.
+     * </p>
+     *
+     */
     public Geometry bufferedImageToLitGeometry(BufferedImage image, AssetManager assetManager){
 
         Mesh mesh = bufferedImageToMesh(image);
