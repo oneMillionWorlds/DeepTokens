@@ -1,5 +1,6 @@
 package com.onemillionworlds.deeptokens;
 
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
@@ -10,11 +11,12 @@ import java.awt.Point;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class MeshBuilder{
 
 
-    public static Mesh createCustomMesh(List<Triangle> triangles, List<List<Point>> edges, float imageWidthPixels, float imageHeightPixels, float objectWidth, float objectDepth, float minAngleToBecomeSharp) {
+    public static Mesh createCustomMesh(List<Triangle> triangles, List<List<Point>> edges, float imageWidthPixels, float imageHeightPixels, float objectWidth, float objectDepth, float minAngleToBecomeSharp, Optional<ColorRGBA> edgeTint) {
         float halfDepth = objectDepth / 2f;
         Mesh mesh = new Mesh();
 
@@ -26,13 +28,15 @@ public class MeshBuilder{
         List<Vector2f> texCoords = new ArrayList<>();
         List<Integer> indices = new ArrayList<>();
 
+        List<ColorRGBA> vertexColors = edgeTint.isEmpty() ? null : new ArrayList<>();
+
         // Add upper and lower face vertices, texture coords, and indices
-        addFace(triangles, vertices, normals, texCoords, indices, halfDepth, imageWidthPixels, imageHeightPixels, pixelScale, true); // upper face
-        addFace(triangles, vertices, normals, texCoords, indices, -halfDepth, imageWidthPixels, imageHeightPixels, pixelScale, false); // lower face
+        addFace(triangles, vertices, normals, texCoords, indices, vertexColors, halfDepth, imageWidthPixels, imageHeightPixels, pixelScale, true); // upper face
+        addFace(triangles, vertices, normals, texCoords, indices, vertexColors, -halfDepth, imageWidthPixels, imageHeightPixels, pixelScale, false); // lower face
 
         // Add edge vertices, texture coords, and indices
         for(List<Point> edge : edges){
-            addEdges(edge, vertices, normals, texCoords, indices, halfDepth, imageWidthPixels, pixelScale, imageHeightPixels, minAngleToBecomeSharp);
+            addEdges(edge, vertices, normals, texCoords, indices, vertexColors, edgeTint, halfDepth, imageWidthPixels, pixelScale, imageHeightPixels, minAngleToBecomeSharp);
         }
 
         // Convert lists to arrays
@@ -43,12 +47,15 @@ public class MeshBuilder{
         mesh.setBuffer(VertexBuffer.Type.Normal, 3, createFloatBufferVector3(normals));
         mesh.setBuffer(VertexBuffer.Type.TexCoord, 2, createFloatBufferVector2(texCoords));
         mesh.setBuffer(VertexBuffer.Type.Index, 1, BufferUtils.createIntBuffer(indicesArray));
+        if(vertexColors != null){
+            mesh.setBuffer(VertexBuffer.Type.Color, 4, createFloatBufferColourRGBA(vertexColors));
+        }
         mesh.updateBound();
 
         return mesh;
     }
 
-    private static void addFace(List<Triangle> triangles, List<Vector3f> vertices, List<Vector3f> normals, List<Vector2f> texCoords, List<Integer> indices, float z, float imageWidth, float imageHeight, float pixelScale, boolean isUpper) {
+    private static void addFace(List<Triangle> triangles, List<Vector3f> vertices, List<Vector3f> normals, List<Vector2f> texCoords, List<Integer> indices, List<ColorRGBA> vertexColors, float z, float imageWidth, float imageHeight, float pixelScale, boolean isUpper) {
         int startIdx = vertices.size();
         Vector3f normal = new Vector3f(0, 0, isUpper ? 1 : -1);
         for (Triangle t : triangles) {
@@ -77,12 +84,21 @@ public class MeshBuilder{
                 indices.add(startIdx + 1);
                 indices.add(startIdx);
             }
+            if (vertexColors != null){
+                //faces don't use this colour, so just white
+                vertexColors.add(ColorRGBA.White);
+                vertexColors.add(ColorRGBA.White);
+                vertexColors.add(ColorRGBA.White);
+            }
+
             startIdx += 3;
         }
     }
 
-    private static void addEdges(List<Point> edges, List<Vector3f> vertices, List<Vector3f> normals, List<Vector2f> texCoords, List<Integer> indices, float halfDepth, float imageWidth, float pixelScale, float imageHeight, float sharpnessAngle) {
+    private static void addEdges(List<Point> edges, List<Vector3f> vertices, List<Vector3f> normals, List<Vector2f> texCoords, List<Integer> indices, List<ColorRGBA> vertexColors, Optional<ColorRGBA> edgeTint, float halfDepth, float imageWidth, float pixelScale, float imageHeight, float sharpnessAngle) {
         int startIdx = vertices.size();
+
+        assert (vertexColors ==null) == edgeTint.isEmpty() : "vertexColors and edgeTint must be both null or both non-null";
 
         List<Vector3f> normalsForEdge = calculateOutwardNormals(edges);
         List<Boolean> sharpPoints = calculateSharpPoint(edges, sharpnessAngle);
@@ -136,6 +152,14 @@ public class MeshBuilder{
             texCoords.add(texCoord2);
             texCoords.add(texCoord3);
             texCoords.add(texCoord4);
+
+            if (edgeTint.isPresent()){
+                ColorRGBA tint = edgeTint.get();
+                vertexColors.add(tint);
+                vertexColors.add(tint);
+                vertexColors.add(tint);
+                vertexColors.add(tint);
+            }
 
             // Add two triangles to form the quad
             indices.add(startIdx + 2);
@@ -194,6 +218,23 @@ public class MeshBuilder{
                 buff.put(element.x).put(element.y);
             } else {
                 buff.put(0).put(0);
+            }
+        }
+        buff.flip();
+        return buff;
+    }
+
+    public static FloatBuffer createFloatBufferColourRGBA(List<ColorRGBA> data) {
+        if (data == null) {
+            return null;
+        }
+        FloatBuffer buff = BufferUtils.createFloatBuffer(4 * data.size());
+        for (int x = 0; x < data.size(); x++) {
+            ColorRGBA datum = data.get(x);
+            if (datum != null) {
+                buff.put(datum.getRed()).put(datum.getGreen()).put(datum.getBlue()).put(datum.getAlpha());
+            } else {
+                buff.put(0).put(0).put(0).put(0);
             }
         }
         buff.flip();
