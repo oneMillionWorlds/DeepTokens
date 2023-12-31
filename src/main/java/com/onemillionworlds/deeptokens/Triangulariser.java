@@ -10,10 +10,6 @@ public class Triangulariser{
         List<Triangle> triangles = new ArrayList<>();
         List<Point> remainingPoints = new ArrayList<>(perimeter);
 
-        System.out.println(TriangularisationFailureException.pointsToString(remainingPoints));
-
-        System.out.println("Triangulating " + remainingPoints.size() + " points");
-
         while (remainingPoints.size() > 3) {
             int size = remainingPoints.size();
             for (int i = 0; i < size; i++) {
@@ -22,8 +18,7 @@ public class Triangulariser{
                 Point next = remainingPoints.get((i + 1) % size);
 
                 if (isConvex(prev, curr, next) && noPointsInside(remainingPoints, prev, curr, next)) {
-                     triangles.add(new Triangle(prev, curr, next));
-                    System.out.println("removing: " + curr );
+                    triangles.add(new Triangle(prev, curr, next));
                     remainingPoints.remove(i);
                     break;
                 }
