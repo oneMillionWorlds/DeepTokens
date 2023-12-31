@@ -14,19 +14,28 @@ public class ImageEdgeExpander{
         int height = originalImage.getHeight();
         BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
+        Color[] pixels = new Color[width * height];
+
+        for (int x = 0; x < width; x++){
+            for(int y = 0; y < height; y++){
+                int pixel = originalImage.getRGB(x, y);
+                pixels[x + y * width] = new Color(pixel, true);
+            }
+        }
+
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                int pixel = originalImage.getRGB(x, y);
-                int alpha = (pixel >> 24) & 0xff;
+                Color pixel = pixels[x + y * width];
+                int alpha = pixel.getAlpha();
 
                 if (alpha == 255) { // Not transparent
-                    newImage.setRGB(x, y, pixel);
+                    newImage.setRGB(x, y, pixels[x + y * width].getRGB());
                 } else { // Transparent
-                    Color averageColor = getAverageColorAround(originalImage, x, y, averagingDistance);
+                    Color averageColor = getAverageColorAround(pixels, x, y, width, height, averagingDistance);
                     if (averageColor != null) {
                         newImage.setRGB(x, y, averageColor.getRGB());
                     } else {
-                        newImage.setRGB(x, y, pixel); // Keep original transparent pixel (Shouldn't ever actually be used)
+                        newImage.setRGB(x, y, pixel.getRGB()); // Keep original transparent pixel (Shouldn't ever actually be used)
                     }
                 }
             }
@@ -35,7 +44,7 @@ public class ImageEdgeExpander{
         return newImage;
     }
 
-    private static Color getAverageColorAround(BufferedImage image, int x, int y, int distance) {
+    private static Color getAverageColorAround(Color[] pixels, int x, int y, int width, int height, int distance) {
         int redTotal = 0, greenTotal = 0, blueTotal = 0, count = 0;
 
         for (int dx = -distance; dx <= distance; dx++) {
@@ -43,15 +52,14 @@ public class ImageEdgeExpander{
                 int nx = x + dx;
                 int ny = y + dy;
 
-                if (nx >= 0 && ny >= 0 && nx < image.getWidth() && ny < image.getHeight()) {
-                    int pixel = image.getRGB(nx, ny);
-                    int alpha = (pixel >> 24) & 0xff;
+                if (nx >= 0 && ny >= 0 && nx < width && ny < height) {
+                    Color pixel = pixels[x + y*width];
+                    int alpha = pixel.getAlpha();
 
                     if (alpha == 255) { // Not transparent
-                        Color color = new Color(pixel);
-                        redTotal += color.getRed();
-                        greenTotal += color.getGreen();
-                        blueTotal += color.getBlue();
+                        redTotal += pixel.getRed();
+                        greenTotal += pixel.getGreen();
+                        blueTotal += pixel.getBlue();
                         count++;
                     }
                 }
