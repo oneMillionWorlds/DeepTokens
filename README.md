@@ -5,6 +5,23 @@ A jmonkey library to make 2D images kind of 3D
 
 ## Getting started
 
+This library is available on maven central 
+
+As a maven dependency:
+    
+    <dependency>
+        <groupId>com.onemillionworlds</groupId>
+        <artifactId>deeptokens</artifactId>
+        <version>X.X.X</version>
+    </dependency>
+
+As a gradle dependency:
+
+    implementation "com.onemillionworlds:deeptokens:X.X.X"
+
+
+See https://mvnrepository.com/artifact/com.onemillionworlds/deeptokens for the latest version.
+
 Create a DeepTokenBuilder and specify its width and depth (height is implicit from the image shape)
 
     DeepTokenBuilder deepTokenBuilder = new DeepTokenBuilder(1, 0.1f);
