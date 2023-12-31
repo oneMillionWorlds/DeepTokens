@@ -21,6 +21,7 @@ public class MeshBuilder{
         Mesh mesh = new Mesh();
 
         float pixelScale = objectWidth / imageWidthPixels;
+        float objectHeight = imageHeightPixels * pixelScale;
 
         // Initialize lists for vertices, texture coordinates, and indices
         List<Vector3f> vertices = new ArrayList<>();
@@ -37,6 +38,12 @@ public class MeshBuilder{
         // Add edge vertices, texture coords, and indices
         for(List<Point> edge : edges){
             addEdges(edge, vertices, normals, texCoords, indices, vertexColors, edgeTint, halfDepth, imageWidthPixels, pixelScale, imageHeightPixels, minAngleToBecomeSharp);
+        }
+
+        //we've built all the vertexes to have the image corner at zero, adjust so that the image is centered
+        for (Vector3f vertex : vertices) {
+            vertex.x -= objectWidth/2f;
+            vertex.y -= objectHeight/2f;
         }
 
         // Convert lists to arrays

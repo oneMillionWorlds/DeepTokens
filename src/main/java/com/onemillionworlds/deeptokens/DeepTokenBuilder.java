@@ -40,6 +40,7 @@ public class DeepTokenBuilder{
      * The edgeSimplificationEpsilon is the maximum distance between the original edge and the simplified edge.
      * the default of 0.75 is basically lossless (no more than 1 pixel) but can be increased to reduce the number of triangles.
      */
+    @SuppressWarnings("unused")
     public void setEdgeSimplificationEpsilon(double edgeSimplificationEpsilon){
         this.edgeSimplificationEpsilon = edgeSimplificationEpsilon;
     }
@@ -48,6 +49,7 @@ public class DeepTokenBuilder{
      * The minimumSharpAngle is the minimum angle between two adjacent edge points that will be considered a sharp edge.
      * This affects the normals that are generated (either smoothly changing or sharp).
      */
+    @SuppressWarnings("unused")
     public void setMinimumSharpAngle(float minimumSharpAngle){
         this.minimumSharpAngle = minimumSharpAngle;
     }
@@ -88,7 +90,6 @@ public class DeepTokenBuilder{
         Mesh mesh = bufferedImageToMesh(image);
 
         // Convert BufferedImage to JME Texture
-        AWTLoader loader=new AWTLoader();
         Texture texture = imageToTexture(image);
 
         // Create material and apply texture
@@ -111,7 +112,6 @@ public class DeepTokenBuilder{
         Mesh mesh = bufferedImageToMesh(image);
 
         // Convert BufferedImage to JME Texture
-        AWTLoader loader=new AWTLoader();
         Texture texture = imageToTexture(image);
 
         // Create material and apply texture
