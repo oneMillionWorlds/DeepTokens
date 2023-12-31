@@ -201,7 +201,6 @@ public class DeepTokenBuilder{
 
     public Texture imageToTexture(BufferedImage image){
         AWTLoader loader=new AWTLoader();
-        return new Texture2D(loader.load(ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon)+1), flipY));
+        return new Texture2D(loader.load(ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon)), flipY));
     }
-
 }
