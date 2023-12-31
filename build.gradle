@@ -44,7 +44,7 @@ publishing { //see https://docs.gradle.org/current/userguide/publishing_maven.ht
     publications {
         mavenJava(MavenPublication) {
             groupId = "${group}"
-            artifactId = 'tamarin'
+            artifactId = 'deeptokens'
             version = "${version}"
 
             from components.java
@@ -52,7 +52,7 @@ publishing { //see https://docs.gradle.org/current/userguide/publishing_maven.ht
             pom {
                 name = project.name
                 description = 'A VR utilities library that extends the functionality in JMonkeyEngine'
-                url = 'https://github.com/oneMillionWorlds/Tamarin'
+                url = 'https://github.com/oneMillionWorlds/deeptokens'
                 licenses {
                     license {
                         name = 'New BSD (3-clause) License'
