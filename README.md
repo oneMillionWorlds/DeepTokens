@@ -19,7 +19,6 @@ As a gradle dependency:
 
     implementation "com.onemillionworlds:deeptokens:X.X.X"
 
-
 See https://mvnrepository.com/artifact/com.onemillionworlds/deeptokens for the latest version.
 
 Create a DeepTokenBuilder and specify its width and depth (height is implicit from the image shape)
@@ -44,6 +43,8 @@ Or just get the mesh and texture and put it together yourself (if you want to us
 ## Attribution and licensing
 
 This project is licensed under the BSD-3 license, meaning it can be used in a commercial project free of charge with no need to provide attribution. That said if you want to mention that DeepTokens is used in your project that would be very welcome.
+
+# Maintainer notes
 
 ## Coding standard
 
