@@ -34,6 +34,8 @@ public class DeepTokenBuilder{
 
     private boolean flipY = true;
 
+    private boolean setStatic = true;
+
     /**
      * @param tokenWidth The width of the token (height will be implicitly determined by the image)
      * @param tokenDepth The thickness of the token
@@ -61,6 +63,14 @@ public class DeepTokenBuilder{
         this.minimumSharpAngle = minimumSharpAngle;
     }
 
+
+    /**
+     * If set to true, the mesh will be marked as static. This is a hint to the JME engine that the mesh will not be
+     * changed. In general this will be true for tokens so the default is true.
+     */
+    public void setStatic(boolean setStatic) {
+        this.setStatic = setStatic;
+    }
 
     /**
      * By default, the edge is the same colour as the last pixel of the image. But you can tint it if you want; e.g. make
@@ -135,7 +145,11 @@ public class DeepTokenBuilder{
         // Step 3: Create a Custom Mesh
         float imageWidth = image.getWidth();
         float imageHeight = image.getHeight();
-        return MeshBuilder.createCustomMesh(triangles, simplePerimeters, imageWidth, imageHeight, tokenWidth, tokenDepth, minimumSharpAngle, edgeTint);
+        Mesh mesh = MeshBuilder.createCustomMesh(triangles, simplePerimeters, imageWidth, imageHeight, tokenWidth, tokenDepth, minimumSharpAngle, edgeTint);
+        if (setStatic) {
+            mesh.setStatic();
+        }
+        return mesh;
     }
 
 
