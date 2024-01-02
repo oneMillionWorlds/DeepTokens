@@ -83,10 +83,18 @@ public class EdgeHoleMapper {
 
     /**
      * A single edge with its (directly contained) holes.
-     * @param edge
-     * @param holes
      */
-    public record EdgeWithContainedHoles(List<Point> edge, List<List<Point>> holes) {
+    public static class EdgeWithContainedHoles{
+
+        List<Point> edge;
+        List<List<Point>> holes;
+
+        public EdgeWithContainedHoles(List<Point> edge, List<List<Point>> holes){
+            this.edge = edge;
+            this.holes = holes;
+        }
+
+
 
         public List<Point> asSinglePerimeter() {
             List<Point> singlePerimeter = new ArrayList<>(edge);
@@ -146,7 +154,23 @@ public class EdgeHoleMapper {
             return connection;
         }
 
-        private record ClosestPoints(Point edgePoint, Point holePoint) {}
+        private static class ClosestPoints{
+            Point edgePoint;
+            Point holePoint;
+
+            public ClosestPoints(Point edgePoint, Point holePoint){
+                this.edgePoint = edgePoint;
+                this.holePoint = holePoint;
+            }
+
+            public Point edgePoint(){
+                return edgePoint;
+            }
+
+            public Point holePoint(){
+                return holePoint;
+            }
+        }
 
     }
 }

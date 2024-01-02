@@ -33,6 +33,22 @@ public class EdgeAndHoleSeparator{
         return sum > 0;
     }
 
-    public record EdgesAndHoles(List<List<Point>> edges, List<List<Point>> holes) {}
+    public static class EdgesAndHoles{
+        List<List<Point>> edges;
+        List<List<Point>> holes;
+
+        public EdgesAndHoles(List<List<Point>> edges, List<List<Point>> holes){
+            this.edges = edges;
+            this.holes = holes;
+        }
+
+        public List<List<Point>> edges(){
+            return edges;
+        }
+
+        public List<List<Point>> holes(){
+            return holes;
+        }
+    }
 
 }
