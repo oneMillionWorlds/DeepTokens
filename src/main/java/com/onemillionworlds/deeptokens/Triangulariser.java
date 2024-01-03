@@ -47,7 +47,7 @@ public class Triangulariser{
                 problemLevel++;
                 if (firstTriangulationFailure){
                     firstTriangulationFailure = false;
-                    LOGGER.warning("Triangulation failure (will guess triangles). Points were: \n" + TriangularisationFailureException.pointsToString(remainingPoints));
+                    LOGGER.warning("Triangulation failure (will guess triangles). Points were: \n" + pointsToString(remainingPoints));
                 }
             }
         }
@@ -87,36 +87,11 @@ public class Triangulariser{
         return (ab >= 0 && bc >= 0 && ca >= 0) || (ab <= 0 && bc <= 0 && ca <= 0);
     }
 
-    /**
-     * To generate the holes we create extra points equal to the other points. The triangluration algorithm needs
-     * to be told not to worry about these points and consider them "outside" the triangle being built
-     */
-    private static boolean isPointVertexOfTriangle(Point p, Point a, Point b, Point c) {
-        return p.equals(a) || p.equals(b) || p.equals(c);
+    public static String pointsToString(List<Point> points){
+        StringBuilder sb = new StringBuilder();
+        for(Point p:points){
+            sb.append("(").append(p.x).append(",").append(p.y).append("), ");
+        }
+        return sb.toString();
     }
-
-    public static class TriangularisationFailureException extends RuntimeException {
-        List<Point> points;
-        public TriangularisationFailureException(String message, List<Point> points) {
-            super(message + ". Do you have single pixel wide regions? Problematic points were (remember y may be flipped): \n. " + pointsToString(points));
-            this.points = points;
-        }
-
-        public List<Point> getPoints(){
-            return points;
-        }
-
-        public String getPointsAsString(){
-            return pointsToString(points);
-        }
-
-        public static String pointsToString(List<Point> points){
-            StringBuilder sb = new StringBuilder();
-            for(Point p:points){
-                sb.append("(").append(p.x).append(",").append(p.y).append("), ");
-            }
-            return sb.toString();
-        }
-    }
-
 }
