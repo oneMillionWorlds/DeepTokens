@@ -34,7 +34,13 @@ public class Triangulariser{
                     problemLevel = 0;
                     break;
                 }
-                if (problemLevel == 2) {
+                if (problemLevel == 2 && isConvex(prev, curr, next)) {
+                    triangles.add(new Triangle(prev, curr, next));
+                    remainingPoints.remove(i);
+                    problemLevel = 0;
+                    break;
+                }
+                if (problemLevel == 3) {
                     //just start forming random triangles
                     triangles.add(new Triangle(prev, curr, next));
                     remainingPoints.remove(i);
