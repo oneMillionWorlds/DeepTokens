@@ -3,12 +3,18 @@ package com.onemillionworlds.deeptokens;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class Triangulariser{
+
+    private static final Logger LOGGER = Logger.getLogger(Triangulariser.class.getName());
 
     public static List<Triangle> triangulate(List<Point> perimeter) {
         List<Triangle> triangles = new ArrayList<>();
         List<Point> remainingPoints = new ArrayList<>(perimeter);
+
+        boolean firstTriangulationFailure = true;
+        int problemLevel = 0;
 
         while (remainingPoints.size() > 3) {
             int size = remainingPoints.size();
@@ -17,15 +23,32 @@ public class Triangulariser{
                 Point curr = remainingPoints.get(i);
                 Point next = remainingPoints.get((i + 1) % size);
 
-                if (isConvex(prev, curr, next) && noPointsInside(remainingPoints, prev, curr, next)) {
+                if(problemLevel ==0 && isConvex(prev, curr, next) && noPointsInside(remainingPoints, prev, curr, next)){
                     triangles.add(new Triangle(prev, curr, next));
                     remainingPoints.remove(i);
+                    break;
+                }
+                if (problemLevel == 1 && (isConvex(prev, curr, next) && noPointsInsideDuplicateRelaxed(remainingPoints, prev, curr, next))) {
+                    triangles.add(new Triangle(prev, curr, next));
+                    remainingPoints.remove(i);
+                    problemLevel = 0;
+                    break;
+                }
+                if (problemLevel == 2) {
+                    //just start forming random triangles
+                    triangles.add(new Triangle(prev, curr, next));
+                    remainingPoints.remove(i);
+                    problemLevel = 0;
                     break;
                 }
             }
             int afterLoopSize = remainingPoints.size();
             if (size == afterLoopSize) {
-                throw new TriangularisationFailureException("Triangulation failed", remainingPoints);
+                problemLevel++;
+                if (firstTriangulationFailure){
+                    firstTriangulationFailure = false;
+                    LOGGER.warning("Triangulation failure (will guess triangles). Points were: \n" + TriangularisationFailureException.pointsToString(remainingPoints));
+                }
             }
         }
 
@@ -41,7 +64,16 @@ public class Triangulariser{
 
     private static boolean noPointsInside(List<Point> points, Point a, Point b, Point c) {
         for (Point p : points) {
-            if (p != a && p != b && p != c && isPointInsideTriangle(p, a, b, c)) {
+            if (p !=a && p!=b && p!=c && isPointInsideTriangle(p, a, b, c)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean noPointsInsideDuplicateRelaxed(List<Point> points, Point a, Point b, Point c) {
+        for (Point p : points) {
+            if (!p.equals(a) && !p.equals(b) && !p.equals(c) && isPointInsideTriangle(p, a, b, c)) {
                 return false;
             }
         }
@@ -81,7 +113,7 @@ public class Triangulariser{
         public static String pointsToString(List<Point> points){
             StringBuilder sb = new StringBuilder();
             for(Point p:points){
-                sb.append(p.x).append(",").append(p.y).append("\n");
+                sb.append("(").append(p.x).append(",").append(p.y).append("), ");
             }
             return sb.toString();
         }
