@@ -17,7 +17,7 @@ java {
 }
 
 group = 'com.onemillionworlds'
-version = '1.0.6'
+version = '1.0.5'
 
 test {
     useJUnitPlatform()
