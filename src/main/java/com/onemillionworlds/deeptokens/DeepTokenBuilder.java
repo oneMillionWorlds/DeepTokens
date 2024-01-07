@@ -36,6 +36,8 @@ public class DeepTokenBuilder{
 
     private boolean setStatic = true;
 
+    private Texture.MinFilter minFilter = Texture.MinFilter.Trilinear;
+
     /**
      * @param tokenWidth The width of the token (height will be implicitly determined by the image)
      * @param tokenDepth The thickness of the token
@@ -87,6 +89,10 @@ public class DeepTokenBuilder{
      */
     public void setFlipY(boolean flipY){
         this.flipY = flipY;
+    }
+
+    public void setMinFilter(Texture.MinFilter minFilter){
+        this.minFilter = minFilter;
     }
 
     private static BufferedImage createFlipped(BufferedImage image)
@@ -215,6 +221,8 @@ public class DeepTokenBuilder{
 
     public Texture imageToTexture(BufferedImage image){
         AWTLoader loader=new AWTLoader();
-        return new Texture2D(loader.load(ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon)), flipY));
+        Texture2D texture = new Texture2D(loader.load(ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon)), flipY));
+        texture.setMinFilter(minFilter);
+        return texture;
     }
 }
