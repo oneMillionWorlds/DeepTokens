@@ -5,6 +5,7 @@ import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
+import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 import com.jme3.texture.plugins.AWTLoader;
@@ -37,6 +38,8 @@ public class DeepTokenBuilder{
     private boolean setStatic = true;
 
     private Texture.MinFilter minFilter = Texture.MinFilter.Trilinear;
+
+    private String geometryName = "ImageGeometry";
 
     /**
      * @param tokenWidth The width of the token (height will be implicitly determined by the image)
@@ -183,10 +186,18 @@ public class DeepTokenBuilder{
         }
 
         // Create geometry and apply material
-        Geometry geom = new Geometry("ImageGeometry", mesh);
+        Geometry geom = new Geometry(geometryName, mesh);
         geom.setMaterial(mat);
 
         return geom;
+    }
+
+    /**
+     * Sets the name the created geometry will have as its name parameter
+     * @param geometryName
+     */
+    public void setGeometryName(String geometryName){
+        this.geometryName = geometryName;
     }
 
     /**
@@ -221,7 +232,8 @@ public class DeepTokenBuilder{
 
     public Texture imageToTexture(BufferedImage image){
         AWTLoader loader=new AWTLoader();
-        Texture2D texture = new Texture2D(loader.load(ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon)), flipY));
+        Image imageJme = loader.load(ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon)), flipY);
+        Texture2D texture = new Texture2D(imageJme);
         texture.setMinFilter(minFilter);
         return texture;
     }
