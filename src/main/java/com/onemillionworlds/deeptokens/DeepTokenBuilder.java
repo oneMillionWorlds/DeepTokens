@@ -10,13 +10,17 @@ import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 import com.jme3.texture.plugins.AWTLoader;
 
+import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * The main class, used to take BufferedImages as an input and produce a JME Mesh as an output.
@@ -40,6 +44,8 @@ public class DeepTokenBuilder{
     private Texture.MinFilter minFilter = Texture.MinFilter.Trilinear;
 
     private String geometryName = "ImageGeometry";
+
+    private int dirtyEdgeReduction = 0;
 
     /**
      * @param tokenWidth The width of the token (height will be implicitly determined by the image)
@@ -98,6 +104,16 @@ public class DeepTokenBuilder{
         this.minFilter = minFilter;
     }
 
+    /**
+     * Often edges that have been "antialiased" have a strobing pattern on the edge. This can be non-desirable. This
+     * setting will blur the very edge of the texture along the edge line to remove this affect. The value is the distance
+     * in pixels to blur. The default is 0 (no blur).
+     * @param dirtyEdgeReduction the number of pixels to blur the edge by (along the edge only)
+     */
+    public void setDirtyEdgeReduction(int dirtyEdgeReduction){
+        this.dirtyEdgeReduction = dirtyEdgeReduction;
+    }
+
     private static BufferedImage createFlipped(BufferedImage image)
     {
         AffineTransform at = new AffineTransform();
@@ -132,7 +148,7 @@ public class DeepTokenBuilder{
      * </p>
      *
      */
-    public Mesh bufferedImageToMesh(BufferedImage image){
+    public EdgeAndMeshData bufferedImageToMesh(BufferedImage image){
         if (flipY) {
             image = createFlipped(image);
         }
@@ -158,7 +174,7 @@ public class DeepTokenBuilder{
         if (setStatic) {
             mesh.setStatic();
         }
-        return mesh;
+        return new EdgeAndMeshData(simplePerimeters, mesh);
     }
 
 
@@ -170,12 +186,13 @@ public class DeepTokenBuilder{
      * </p>
      *
      */
+    @SuppressWarnings("unused")
     public Geometry bufferedImageToUnshadedGeometry(BufferedImage image, AssetManager assetManager){
 
-        Mesh mesh = bufferedImageToMesh(image);
+        EdgeAndMeshData mesh = bufferedImageToMesh(image);
 
         // Convert BufferedImage to JME Texture
-        Texture texture = imageToTexture(image);
+        Texture texture = imageToTexture(image, mesh.getDetectedEdges());
 
         // Create material and apply texture
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
@@ -186,7 +203,7 @@ public class DeepTokenBuilder{
         }
 
         // Create geometry and apply material
-        Geometry geom = new Geometry(geometryName, mesh);
+        Geometry geom = new Geometry(geometryName, mesh.getMesh());
         geom.setMaterial(mat);
 
         return geom;
@@ -210,10 +227,10 @@ public class DeepTokenBuilder{
      */
     public Geometry bufferedImageToLitGeometry(BufferedImage image, AssetManager assetManager){
 
-        Mesh mesh = bufferedImageToMesh(image);
+        EdgeAndMeshData mesh = bufferedImageToMesh(image);
 
         // Convert BufferedImage to JME Texture
-        Texture texture = imageToTexture(image);
+        Texture texture = imageToTexture(image, mesh.getDetectedEdges());
 
         // Create material and apply texture
         Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
@@ -224,17 +241,54 @@ public class DeepTokenBuilder{
         }
 
         // Create geometry and apply material
-        Geometry geom = new Geometry("ImageGeometry", mesh);
+        Geometry geom = new Geometry("ImageGeometry", mesh.getMesh());
         geom.setMaterial(mat);
 
         return geom;
     }
 
-    public Texture imageToTexture(BufferedImage image){
+    public Texture imageToTexture(BufferedImage image, List<List<Point>> detectedEdges){
         AWTLoader loader=new AWTLoader();
-        Image imageJme = loader.load(ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon)), flipY);
+
+        if (flipY) {
+            detectedEdges = detectedEdges.stream().map(edge -> {
+                List<Point> flippedEdge = new ArrayList<>();
+                for(Point point : edge){
+                    flippedEdge.add(new Point(point.x, image.getHeight() - point.y));
+                }
+                return flippedEdge;
+            }).collect(Collectors.toList());
+        }
+
+        BufferedImage processedImage = ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon),  (int)Math.ceil(Math.max(edgeSimplificationEpsilon, dirtyEdgeReduction)),detectedEdges);
+
+        try{
+            ImageIO.write(processedImage, "png", new File("C:\\Users\\richa\\Documents\\Development\\test.png"));
+        } catch(IOException e){
+            throw new RuntimeException(e);
+        }
+
+        Image imageJme = loader.load(processedImage, flipY);
         Texture2D texture = new Texture2D(imageJme);
         texture.setMinFilter(minFilter);
         return texture;
+    }
+
+    public static class EdgeAndMeshData{
+        public final List<List<Point>> detectedEdges;
+        public final Mesh mesh;
+
+        public EdgeAndMeshData(List<List<Point>> detectedEdges, Mesh mesh){
+            this.detectedEdges = detectedEdges;
+            this.mesh = mesh;
+        }
+
+        public List<List<Point>> getDetectedEdges(){
+            return detectedEdges;
+        }
+
+        public Mesh getMesh(){
+            return mesh;
+        }
     }
 }

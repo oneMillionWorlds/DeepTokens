@@ -58,6 +58,10 @@ public class Triangulariser{
             }
         }
 
+        if (!isConvex(remainingPoints.get(0), remainingPoints.get(1), remainingPoints.get(2))) {
+            LOGGER.warning("Triangulation failure (last 3 points failed convex check). Points were: \n" + pointsToString(remainingPoints));
+        }
+
         // Add the last remaining triangle
         triangles.add(new Triangle(remainingPoints.get(0), remainingPoints.get(1), remainingPoints.get(2)));
 

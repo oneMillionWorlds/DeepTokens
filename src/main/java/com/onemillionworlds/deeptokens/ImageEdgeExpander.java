@@ -1,7 +1,12 @@
 package com.onemillionworlds.deeptokens;
 
 import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This gives the image an expanded "fuzzy edge". This is useful in case the simplification process leads to the shape
@@ -9,26 +14,36 @@ import java.awt.image.BufferedImage;
  */
 public class ImageEdgeExpander{
 
-    public static BufferedImage processImage(BufferedImage originalImage, int averagingDistance) {
+    /**
+     *
+     * @param originalImage the raw image
+     * @param maximumEdgeEpsilonError furthest the edge can be from the original edge (simplification episilon)
+     * @param averagingDistance how far to look for pixels to average when on edge (may be more than maximumEdgeEpsilonError to give dirty edge reduction)
+     * @param edges the edges
+     * @return
+     */
+    public static BufferedImage processImage(BufferedImage originalImage, int maximumEdgeEpsilonError, int averagingDistance, List<List<Point>> edges) {
         int width = originalImage.getWidth();
         int height = originalImage.getHeight();
         BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
+        Graphics graphics = newImage.getGraphics();
+        graphics.drawImage(originalImage, 0, 0, null);
+
         int[] pixels = originalImage.getRGB(0, 0, width, height, null, 0, width);
 
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                int pixel = pixels[x + y * width];
-                int alpha = (pixel >> 24) & 0xff;
 
-                if (alpha == 255) { // Not transparent
-                    newImage.setRGB(x, y, pixel);
-                } else { // Transparent
-                    Color averageColor = getAverageColorAround(pixels, x, y, width, height, averagingDistance);
-                    if (averageColor != null) {
-                        newImage.setRGB(x, y, averageColor.getRGB());
-                    }
-                }
+        Set<Point> pointsOnEdge = new HashSet<>();
+        for(List<Point> edge : edges){
+            pointsOnEdge.addAll(EdgeRasterizer.thickenLine(EdgeRasterizer.rasterizeEdge(edge), maximumEdgeEpsilonError));
+        }
+        Color black = Color.BLACK;
+        for(Point pointNearEdge : pointsOnEdge){
+            newImage.setRGB(pointNearEdge.x, pointNearEdge.y, black.getRGB());
+
+            Color averageColor = getAverageColorAround(pixels, pointNearEdge.x, pointNearEdge.y, width, height, averagingDistance);
+            if (averageColor != null) {
+                newImage.setRGB(pointNearEdge.x, pointNearEdge.y, averageColor.getRGB());
             }
         }
 
@@ -63,4 +78,5 @@ public class ImageEdgeExpander{
 
         return count > 0 ? new Color(redTotal / count, greenTotal / count, blueTotal / count) : null;
     }
+
 }
