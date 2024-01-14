@@ -2,6 +2,7 @@ package com.onemillionworlds.deeptokens;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,15 +100,17 @@ public class EdgeHoleMapper {
         public List<Point> asSinglePerimeter() {
             List<Point> singlePerimeter = new ArrayList<>(edge);
 
-            for (List<Point> hole : holes) {
-                // Find the closest points between edge and hole
-                ClosestPoints closestPoints = findClosestPoints(singlePerimeter, hole);
+            List<List<Point>> holes = new ArrayList<>(this.holes);
 
-                // Index in the edge where the connection will be inserted
+            while(!holes.isEmpty()){
+                List<Point> bestHoleToAdd = holes.stream()
+                        .min(Comparator.comparingDouble(hole -> findClosestPoints(singlePerimeter, hole).distance()))
+                        .orElseThrow(() -> new RuntimeException("Suprising no holes"));
+
+                holes.remove(bestHoleToAdd);
+                ClosestPoints closestPoints = findClosestPoints(singlePerimeter, bestHoleToAdd);
                 int edgeInsertIndex = singlePerimeter.indexOf(closestPoints.edgePoint());
-
-                // Create the connection and splice it into the edge
-                List<Point> connection = createConnection(closestPoints, hole);
+                List<Point> connection = createConnection(closestPoints, bestHoleToAdd);
                 singlePerimeter.addAll(edgeInsertIndex + 1, connection);
             }
 
@@ -169,6 +172,10 @@ public class EdgeHoleMapper {
 
             public Point holePoint(){
                 return holePoint;
+            }
+
+            public double distance(){
+                return edgePoint.distance(holePoint);
             }
         }
 
