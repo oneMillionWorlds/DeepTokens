@@ -1,5 +1,7 @@
 package com.onemillionworlds.deeptokens;
 
+import com.jme3.math.Vector2f;
+
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -122,10 +124,24 @@ public class EdgeHoleMapper {
             Point closestEdgePoint = null;
             Point closestHolePoint = null;
 
-            for (Point edgePoint : edge) {
-                for (Point holePoint : hole) {
+            for (int i=0;i<edge.size();i++) {
+                Point edgePoint = edge.get(i);
+                for (int j =0;j<hole.size();j++) {
+                    Point holePoint = hole.get(j);
                     double distance = edgePoint.distance(holePoint);
                     if (distance < minDistance) {
+                        //check if the line made between the two points is "facing the right way" for the break to be valid.
+                        //this is only really relevant if the point has already been part of an edge insertion and so duplicated, one will head off in one
+                        //direction and the other will head off in the other direction, must choose the correct one of the
+                        //duplicate pair
+                        if (!pointIsToLeftOfLine(holePoint, i ==0 ? edge.get(edge.size() - 1) : edge.get(i - 1), edgePoint, i == edge.size() - 1 ? edge.get(0) : edge.get(i + 1))){
+                            continue;
+                        }
+
+                        if (!pointIsToLeftOfLine(edgePoint, i ==0 ? hole.get(hole.size() - 1) : hole.get(i - 1), holePoint, i == hole.size() - 1 ? hole.get(0) : hole.get(i + 1))){
+                            continue;
+                        }
+
                         minDistance = distance;
                         closestEdgePoint = edgePoint;
                         closestHolePoint = holePoint;
@@ -137,7 +153,7 @@ public class EdgeHoleMapper {
         }
 
         private List<Point> createConnection(ClosestPoints closestPoints, List<Point> hole) {
-            List<Point> connection = new ArrayList<>();
+
             Point edgePoint = closestPoints.edgePoint();
             Point holePoint = closestPoints.holePoint();
 
@@ -150,6 +166,7 @@ public class EdgeHoleMapper {
             for (int i = 0; i < holeStartIndex; i++) {
                 rearrangedHole.add(hole.get(i));
             }
+            List<Point> connection = new ArrayList<>(rearrangedHole.size() + 2);
             connection.addAll(rearrangedHole);
             connection.add(holePoint);
             connection.add(edgePoint);
@@ -177,6 +194,38 @@ public class EdgeHoleMapper {
             public double distance(){
                 return edgePoint.distance(holePoint);
             }
+        }
+
+        private static boolean pointIsToLeftOfLine(Point point, Point a, Point b,  Point c){
+            double determinantAB = (b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x);
+            double determinantBC = (c.x - b.x) * (point.y - b.y) - (c.y - b.y) * (point.x - b.x);
+
+            boolean isLeftAB = determinantAB > 0;
+            boolean isLeftBC = determinantBC > 0;
+
+            if (isLeftAB == isLeftBC) {
+                // to the same side of both lines (if made infinite) no need to get complicated
+                return isLeftAB;
+            }  else {
+                // in this case we imagine that the line extends from point B infinitely in two directions, towards A and towards C.
+                // we project the point onto that line and see if it's projection is on the A <-> B bit or the B <-> C bit
+
+                boolean aToBWins = projectOntoLine(new Vector2f(point.x, point.y), new Vector2f(b.x - a.x, b.y - a.y), new Vector2f(a.x, a.y)) > 0;
+
+                return aToBWins ? isLeftAB : isLeftBC;
+            }
+        }
+
+        /**
+         * Projects the point onto the line and returns the distance along the line from the start of the line to the projection.
+         * If the projection is before the start of the line then a negative value is returned.
+         */
+        private static double projectOntoLine(Vector2f lineStart, Vector2f lineDirection, Vector2f point){
+            // Convert lineStart and point to vectors
+            Vector2f startToPoint = new Vector2f(point.x - lineStart.x, point.y - lineStart.y);
+
+            // This is the distance from lineStart to the projection along the line
+            return startToPoint.dot(lineDirection);
         }
 
     }

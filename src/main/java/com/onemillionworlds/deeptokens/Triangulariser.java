@@ -28,19 +28,7 @@ public class Triangulariser{
                     remainingPoints.remove(i);
                     break;
                 }
-                if (problemLevel == 1 && (isConvex(prev, curr, next) && noPointsInsideDuplicateRelaxed(remainingPoints, prev, curr, next))) {
-                    triangles.add(new Triangle(prev, curr, next));
-                    remainingPoints.remove(i);
-                    problemLevel = 0;
-                    break;
-                }
-                if (problemLevel == 2 && isConvex(prev, curr, next)) {
-                    triangles.add(new Triangle(prev, curr, next));
-                    remainingPoints.remove(i);
-                    problemLevel = 0;
-                    break;
-                }
-                if (problemLevel == 3) {
+                if (problemLevel == 1) {
                     //just start forming random triangles
                     triangles.add(new Triangle(prev, curr, next));
                     remainingPoints.remove(i);
@@ -58,10 +46,6 @@ public class Triangulariser{
             }
         }
 
-        if (!isConvex(remainingPoints.get(0), remainingPoints.get(1), remainingPoints.get(2))) {
-            LOGGER.warning("Triangulation failure (last 3 points failed convex check). Points were: \n" + pointsToString(remainingPoints));
-        }
-
         // Add the last remaining triangle
         triangles.add(new Triangle(remainingPoints.get(0), remainingPoints.get(1), remainingPoints.get(2)));
 
@@ -75,15 +59,6 @@ public class Triangulariser{
     private static boolean noPointsInside(List<Point> points, Point a, Point b, Point c) {
         for (Point p : points) {
             if (p !=a && p!=b && p!=c && isPointInsideTriangle(p, a, b, c)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static boolean noPointsInsideDuplicateRelaxed(List<Point> points, Point a, Point b, Point c) {
-        for (Point p : points) {
-            if (!p.equals(a) && !p.equals(b) && !p.equals(c) && isPointInsideTriangle(p, a, b, c)) {
                 return false;
             }
         }
