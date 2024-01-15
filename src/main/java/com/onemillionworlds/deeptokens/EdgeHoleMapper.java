@@ -134,11 +134,12 @@ public class EdgeHoleMapper {
                         //this is only really relevant if the point has already been part of an edge insertion and so duplicated, one will head off in one
                         //direction and the other will head off in the other direction, must choose the correct one of the
                         //duplicate pair
-                        if (!pointIsToLeftOfLine(holePoint, i ==0 ? edge.get(edge.size() - 1) : edge.get(i - 1), edgePoint, i == edge.size() - 1 ? edge.get(0) : edge.get(i + 1))){
+
+                        if (!pointIsToLeftOfLine(holePoint, edge, i)){
                             continue;
                         }
 
-                        if (!pointIsToLeftOfLine(edgePoint, i ==0 ? hole.get(hole.size() - 1) : hole.get(i - 1), holePoint, i == hole.size() - 1 ? hole.get(0) : hole.get(i + 1))){
+                        if (!pointIsToLeftOfLine(edgePoint, hole, j)){
                             continue;
                         }
 
@@ -196,6 +197,23 @@ public class EdgeHoleMapper {
             }
         }
 
+        private static boolean pointIsToLeftOfLine(Point point, List<Point> edge, int indexOfCentrePointOfLine){
+            int before = indexOfCentrePointOfLine - 1;
+            if (before < 0){
+                before+= edge.size();
+            }
+            int after = indexOfCentrePointOfLine + 1;
+            if (after >= edge.size()){
+                after -= edge.size();
+            }
+
+            Point a = edge.get(before);
+            Point b = edge.get(indexOfCentrePointOfLine);
+            Point c = edge.get(after);
+
+            return pointIsToLeftOfLine(point, a, b, c);
+        }
+
         private static boolean pointIsToLeftOfLine(Point point, Point a, Point b,  Point c){
             double determinantAB = (b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x);
             double determinantBC = (c.x - b.x) * (point.y - b.y) - (c.y - b.y) * (point.x - b.x);
@@ -210,7 +228,7 @@ public class EdgeHoleMapper {
                 // in this case we imagine that the line extends from point B infinitely in two directions, towards A and towards C.
                 // we project the point onto that line and see if it's projection is on the A <-> B bit or the B <-> C bit
 
-                boolean aToBWins = projectOntoLine(new Vector2f(point.x, point.y), new Vector2f(b.x - a.x, b.y - a.y), new Vector2f(a.x, a.y)) > 0;
+                boolean aToBWins = projectOntoLine(new Vector2f(point.x, point.y), new Vector2f(a.x - b.x, a.y - b.y), new Vector2f(a.x, a.y)) > 0;
 
                 return aToBWins ? isLeftAB : isLeftBC;
             }
