@@ -262,12 +262,6 @@ public class DeepTokenBuilder{
 
         BufferedImage processedImage = ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon),  (int)Math.ceil(Math.max(edgeSimplificationEpsilon, dirtyEdgeReduction)),detectedEdges);
 
-        try{
-            ImageIO.write(processedImage, "png", new File("C:\\Users\\richa\\Documents\\Development\\test.png"));
-        } catch(IOException e){
-            throw new RuntimeException(e);
-        }
-
         Image imageJme = loader.load(processedImage, flipY);
         Texture2D texture = new Texture2D(imageJme);
         texture.setMinFilter(minFilter);

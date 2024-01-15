@@ -37,13 +37,13 @@ public class ImageEdgeExpander{
         for(List<Point> edge : edges){
             pointsOnEdge.addAll(EdgeRasterizer.thickenLine(EdgeRasterizer.rasterizeEdge(edge), maximumEdgeEpsilonError));
         }
-        Color black = Color.BLACK;
-        for(Point pointNearEdge : pointsOnEdge){
-            newImage.setRGB(pointNearEdge.x, pointNearEdge.y, black.getRGB());
 
-            Color averageColor = getAverageColorAround(pixels, pointNearEdge.x, pointNearEdge.y, width, height, averagingDistance);
-            if (averageColor != null) {
-                newImage.setRGB(pointNearEdge.x, pointNearEdge.y, averageColor.getRGB());
+        for(Point pointNearEdge : pointsOnEdge){
+            if (pointNearEdge.x>=0 && pointNearEdge.y>=0 && pointNearEdge.x<width && pointNearEdge.y<height){
+                Color averageColor = getAverageColorAround(pixels, pointNearEdge.x, pointNearEdge.y, width, height, averagingDistance);
+                if(averageColor != null){
+                    newImage.setRGB(pointNearEdge.x, pointNearEdge.y, averageColor.getRGB());
+                }
             }
         }
 
