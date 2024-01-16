@@ -2,12 +2,17 @@ package com.onemillionworlds.deeptokens;
 
 import com.jme3.math.Vector2f;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * This takes a list of outer edges and inner holes and maps them to each other.
@@ -119,6 +124,62 @@ public class EdgeHoleMapper {
             return singlePerimeter;
         }
 
+        /**
+         * This helps debug problems with the algorithm, but showing the total edge is a slowly changing
+         * colour so you can see the order of the edges being added.
+         * @return
+         */
+        public BufferedImage completeLineDebugImage(){
+            List<Point> perimeter = asSinglePerimeter();
+            int maxX = perimeter.stream().mapToInt(p -> p.x).max().getAsInt()+20;
+            int targetMaxX = 1000;
+
+            float multiplier = Math.max(targetMaxX / (float)maxX, 1);
+            perimeter = perimeter.stream().map(
+                    p -> new Point((int)(p.x * multiplier)+20, (int)(p.y * multiplier)+20)
+                ).collect(Collectors.toList());
+
+            maxX = perimeter.stream().mapToInt(p -> p.x).max().getAsInt()+20;
+            int maxY = perimeter.stream().mapToInt(p -> p.y).max().getAsInt()+20;
+
+
+            BufferedImage image = new BufferedImage(maxX, maxY, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D graphics2D = (Graphics2D)image.getGraphics();
+            graphics2D.setBackground(Color.BLACK);
+            graphics2D.setStroke(new BasicStroke(3));
+            for(int i=0;i<perimeter.size();i++){
+                Point lastPoint = perimeter.get( i==0 ? perimeter.size()-1 : (i-1));
+                Point point = perimeter.get(i);
+                Point nextPoint = perimeter.get((i+1)%perimeter.size());
+                float intensitity = 0.25f + 0.75f * (i/(float)perimeter.size());
+
+                Vector2f backVector = new Vector2f(point.x-lastPoint.x, point.y- lastPoint.y ).normalizeLocal();
+                Vector2f forwardVector = new Vector2f(nextPoint.x - point.x, nextPoint.y - point.y).normalizeLocal();
+
+                Vector2f averageSidewaysDirection = new Vector2f();
+                averageSidewaysDirection.addLocal(rotate90(backVector));
+                averageSidewaysDirection.addLocal(rotate90(forwardVector));
+                averageSidewaysDirection.multLocal(0.5f);
+
+                float distanceToBringIn = 15;
+
+                Vector2f insideOfCorner = new Vector2f(point.x, point.y).addLocal(averageSidewaysDirection.mult(distanceToBringIn));
+
+                graphics2D.setColor(new Color(intensitity, intensitity, intensitity));
+
+                graphics2D.drawLine(point.x, point.y, nextPoint.x, nextPoint.y);
+                graphics2D.setColor(Color.WHITE);
+                //numbers go inside the shape (beware zero sized cuts)
+                graphics2D.drawString(""+i, insideOfCorner.x, insideOfCorner.y+5); //the offset is for the font size
+            }
+            graphics2D.dispose();
+            return image;
+        }
+
+        private Vector2f rotate90(Vector2f in){
+            return new Vector2f(-in.y, in.x);
+        }
+
         private ClosestPoints findClosestPoints(List<Point> edge, List<Point> hole) {
             double minDistance = Double.MAX_VALUE;
             Point closestEdgePoint = null;
@@ -134,12 +195,11 @@ public class EdgeHoleMapper {
                         //this is only really relevant if the point has already been part of an edge insertion and so duplicated, one will head off in one
                         //direction and the other will head off in the other direction, must choose the correct one of the
                         //duplicate pair
-
-                        if (!pointIsToLeftOfLine(holePoint, edge, i)){
+                        if (isBDInArc(holePoint, edge, i)){
                             continue;
                         }
 
-                        if (!pointIsToLeftOfLine(edgePoint, hole, j)){
+                        if (isBDInArc(edgePoint, hole, j)){
                             continue;
                         }
 
@@ -197,7 +257,7 @@ public class EdgeHoleMapper {
             }
         }
 
-        private static boolean pointIsToLeftOfLine(Point point, List<Point> edge, int indexOfCentrePointOfLine){
+        private static boolean isBDInArc(Point point, List<Point> edge, int indexOfCentrePointOfLine){
             int before = indexOfCentrePointOfLine - 1;
             if (before < 0){
                 before+= edge.size();
@@ -210,8 +270,28 @@ public class EdgeHoleMapper {
             Point a = edge.get(before);
             Point b = edge.get(indexOfCentrePointOfLine);
             Point c = edge.get(after);
+            return isBDInArc(a, b, c, point);
+        }
 
-            return pointIsToLeftOfLine(point, a, b, c);
+        public static boolean isBDInArc(Point A, Point B, Point C, Point D) {
+
+            double angleA = Math.atan2(A.y - B.y, A.x - B.x);
+            double angleC = Math.atan2(C.y - B.y, C.x - B.x);
+            double angleD = Math.atan2(D.y - B.y, D.x - B.x);
+
+            //want angleD to be between angleA and angleC (but may have to take account of wrapping around)
+            if (angleC<angleA){
+                angleC += Math.PI*2;
+            }
+            if (angleD<angleA){
+                angleD += Math.PI*2;
+            }
+
+            return angleA < angleD && angleD < angleC;
+        }
+
+        private static int crossProduct(Point v1, Point v2) {
+            return v1.x * v2.y - v1.y * v2.x;
         }
 
         private static boolean pointIsToLeftOfLine(Point point, Point a, Point b,  Point c){
