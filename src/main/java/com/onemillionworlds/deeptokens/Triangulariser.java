@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class Triangulariser{
 
@@ -22,6 +23,11 @@ public class Triangulariser{
                 Point prev = remainingPoints.get((i + size - 1) % size);
                 Point curr = remainingPoints.get(i);
                 Point next = remainingPoints.get((i + 1) % size);
+
+                if (curr.equals(next)){
+                    remainingPoints.remove(i);
+                    break;
+                }
 
                 if(problemLevel ==0 && isConvex(prev, curr, next) && noPointsInside(remainingPoints, prev, curr, next)){
                     triangles.add(new Triangle(prev, curr, next));
