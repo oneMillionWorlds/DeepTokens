@@ -10,13 +10,10 @@ import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 import com.jme3.texture.plugins.AWTLoader;
 
-import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +43,8 @@ public class DeepTokenBuilder{
     private String geometryName = "ImageGeometry";
 
     private int dirtyEdgeReduction = 0;
+
+    private boolean strictMode = false;
 
     /**
      * @param tokenWidth The width of the token (height will be implicitly determined by the image)
@@ -164,7 +163,7 @@ public class DeepTokenBuilder{
         List<Triangle> triangles = new ArrayList<>();
 
         for(EdgeHoleMapper.EdgeWithContainedHoles perimeter : edgeWithContainedHoles){
-            triangles.addAll(Triangulariser.triangulate(perimeter.asSinglePerimeter()));
+            triangles.addAll(Triangulariser.triangulate(perimeter.asSinglePerimeter(), strictMode));
         }
 
         // Step 3: Create a Custom Mesh
@@ -177,6 +176,13 @@ public class DeepTokenBuilder{
         return new EdgeAndMeshData(simplePerimeters, mesh);
     }
 
+    /**
+     * @param strictMode When in strict mode problems will cause exceptions, when in non-strict mode it will try to carry on
+     */
+    @SuppressWarnings("unused")
+    public void setStrictMode(boolean strictMode){
+        this.strictMode = strictMode;
+    }
 
     /**
      * Creates an unshaded geometry from a BufferedImage.

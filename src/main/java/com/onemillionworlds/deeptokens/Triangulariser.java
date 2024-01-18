@@ -4,13 +4,12 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class Triangulariser{
 
     private static final Logger LOGGER = Logger.getLogger(Triangulariser.class.getName());
 
-    public static List<Triangle> triangulate(List<Point> perimeter) {
+    public static List<Triangle> triangulate(List<Point> perimeter, boolean strictMode) {
         List<Triangle> triangles = new ArrayList<>();
         List<Point> remainingPoints = new ArrayList<>(perimeter);
 
@@ -46,8 +45,13 @@ public class Triangulariser{
             if (size == afterLoopSize) {
                 problemLevel++;
                 if (firstTriangulationFailure){
+                    String message = "Triangulation failure (will guess triangles). Points were: \n" + pointsToString(remainingPoints);
                     firstTriangulationFailure = false;
-                    LOGGER.warning("Triangulation failure (will guess triangles). Points were: \n" + pointsToString(remainingPoints));
+                    if (strictMode){
+                        throw new TriangulationFailureException(message, remainingPoints);
+                    }else{
+                        LOGGER.warning("Triangulation failure (will guess triangles). Points were: \n" + pointsToString(remainingPoints));
+                    }
                 }
             }
         }
@@ -84,5 +88,18 @@ public class Triangulariser{
             sb.append("(").append(p.x).append(",").append(p.y).append("), ");
         }
         return sb.toString();
+    }
+
+    public static class TriangulationFailureException extends RuntimeException{
+
+        List<Point> remainingPoints;
+        public TriangulationFailureException(String message, List<Point> remainingPoints){
+            super(message);
+            this.remainingPoints = remainingPoints;
+        }
+
+        public List<Point> getRemainingPoints(){
+            return remainingPoints;
+        }
     }
 }
