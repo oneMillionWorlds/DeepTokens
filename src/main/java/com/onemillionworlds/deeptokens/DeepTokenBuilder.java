@@ -14,6 +14,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -253,9 +254,31 @@ public class DeepTokenBuilder{
         return geom;
     }
 
+    /**
+     * This applies the edge bluring to ensure that the edge is not "dirty" or if simplification
+     * has caused the mesh to "slip off" the texture. Then it converts the image to a texture.
+     */
     public Texture imageToTexture(BufferedImage image, List<List<Point>> detectedEdges){
         AWTLoader loader=new AWTLoader();
+        BufferedImage processedImage = imageToImage(image, detectedEdges);
 
+        Image imageJme = loader.load(processedImage, flipY);
+        Texture2D texture = new Texture2D(imageJme);
+        texture.setMinFilter(minFilter);
+        return texture;
+    }
+
+    /**
+     * This applies the edge bluring to ensure that the edge is not "dirty" or if simplification
+     * has caused the mesh to "slip off" the texture.
+     *
+     * <p>
+     *     NOTE; this method will not flip the Y (if configured to) in the output image, so calling code must do that 
+     *     if appropriate (probably during converting the image to a texture, see {@link AWTLoader#load(InputStream, boolean)}.
+     * </p>
+     */
+    @SuppressWarnings("unused")
+    public BufferedImage imageToImage(BufferedImage image, List<List<Point>> detectedEdges){
         if (flipY) {
             detectedEdges = detectedEdges.stream().map(edge -> {
                 List<Point> flippedEdge = new ArrayList<>();
@@ -266,12 +289,7 @@ public class DeepTokenBuilder{
             }).collect(Collectors.toList());
         }
 
-        BufferedImage processedImage = ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon),  (int)Math.ceil(Math.max(edgeSimplificationEpsilon, dirtyEdgeReduction)),detectedEdges);
-
-        Image imageJme = loader.load(processedImage, flipY);
-        Texture2D texture = new Texture2D(imageJme);
-        texture.setMinFilter(minFilter);
-        return texture;
+        return ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon),  (int)Math.ceil(Math.max(edgeSimplificationEpsilon, dirtyEdgeReduction)),detectedEdges);
     }
 
     public static class EdgeAndMeshData{
