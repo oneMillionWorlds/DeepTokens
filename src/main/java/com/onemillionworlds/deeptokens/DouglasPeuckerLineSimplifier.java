@@ -35,14 +35,15 @@ public class DouglasPeuckerLineSimplifier{
             }
         }
 
-        if(points.size() > 3){
+        if(simplified.size() > 3){
             //the last and first points will be very close to each other. Probably we can get rid of one of them as well.
             double distanceIfRemoveFirst = distanceToLineApprox(simplified.get(0), simplified.get(1), simplified.get(simplified.size() - 1));
 
             if(distanceIfRemoveFirst < epsilon){
                 simplified.remove(0);
             }
-
+        }
+        if(simplified.size() > 3){
             double distanceIfRemoveLast = distanceToLineApprox(simplified.get(simplified.size() - 1), simplified.get(0), simplified.get(simplified.size() - 2));
 
             if(distanceIfRemoveLast < epsilon){
