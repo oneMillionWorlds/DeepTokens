@@ -255,6 +255,40 @@ public class DeepTokenBuilder{
     }
 
     /**
+     * Creates a lit geometry from a BufferedImage (i.e. one intended for a scene with light) that uses the PBRLighting
+     * material.
+     * <p>
+     * There are very few restrictions on the image (e.g. it can be concave, have holes, etc) but it must not have any
+     * single pixel wide regions (thin hairs). These will lead to triangulisation failures.
+     * </p>
+     *
+     */
+    public Geometry bufferedImageToPBRLitGeometry(BufferedImage image, AssetManager assetManager){
+
+        EdgeAndMeshData mesh = bufferedImageToMesh(image);
+
+        // Convert BufferedImage to JME Texture
+        Texture texture = imageToTexture(image, mesh.getDetectedEdges());
+
+        // Create material and apply texture
+        Material mat = new Material(assetManager, "Common/MatDefs/Light/PBRLighting.j3md");
+        mat.setTexture("BaseColorMap", texture);
+
+        if(edgeTint.isPresent()){
+            mat.setBoolean("UseVertexColor", true);
+        }
+
+        //PRBs default Metallic of 1 gives weird results where the image colour isn't used at all. So we set it to 0.05
+        mat.setFloat("Metallic", 0.05f);
+
+        // Create geometry and apply material
+        Geometry geom = new Geometry("ImageGeometry", mesh.getMesh());
+        geom.setMaterial(mat);
+
+        return geom;
+    }
+
+    /**
      * This applies the edge bluring to ensure that the edge is not "dirty" or if simplification
      * has caused the mesh to "slip off" the texture. Then it converts the image to a texture.
      */
