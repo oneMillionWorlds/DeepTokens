@@ -32,9 +32,9 @@ dependencies {
      * It is presumed any user of Deep tokens will already be using JMonkey but we don't want to force a version on them.
      * That is why this is a compileOnly dependency
      */
-    implementation "${jme3.g}:jme3-core:${jme3.v}"
-    implementation "${jme3.g}:jme3-lwjgl3:${jme3.v}"
-    implementation "${jme3.g}:jme3-desktop:${jme3.v}"
+    compileOnly "${jme3.g}:jme3-core:${jme3.v}"
+    compileOnly "${jme3.g}:jme3-lwjgl3:${jme3.v}"
+    compileOnly "${jme3.g}:jme3-desktop:${jme3.v}"
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
     testImplementation "${jme3.g}:jme3-core:${jme3.v}"
