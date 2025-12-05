@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 /**
  * The main class, used to take BufferedImages as an input and produce a JME Mesh as an output.
  */
+@SuppressWarnings("unused")
 public class DeepTokenBuilder{
 
     private Optional<ColorRGBA> edgeTint = Optional.empty();
@@ -328,6 +329,50 @@ public class DeepTokenBuilder{
         }
 
         return ImageEdgeExpander.processImage(image, (int)Math.ceil(edgeSimplificationEpsilon),  (int)Math.ceil(Math.max(edgeSimplificationEpsilon, dirtyEdgeReduction)),detectedEdges);
+    }
+
+    public Optional<ColorRGBA> getEdgeTint() {
+        return edgeTint;
+    }
+
+    public double getEdgeSimplificationEpsilon() {
+        return edgeSimplificationEpsilon;
+    }
+
+    public float getMinimumSharpAngle() {
+        return minimumSharpAngle;
+    }
+
+    public float getTokenDepth() {
+        return tokenDepth;
+    }
+
+    public float getTokenWidth() {
+        return tokenWidth;
+    }
+
+    public boolean isFlipY() {
+        return flipY;
+    }
+
+    public boolean isSetStatic() {
+        return setStatic;
+    }
+
+    public Texture.MinFilter getMinFilter() {
+        return minFilter;
+    }
+
+    public String getGeometryName() {
+        return geometryName;
+    }
+
+    public int getDirtyEdgeReduction() {
+        return dirtyEdgeReduction;
+    }
+
+    public boolean isStrictMode() {
+        return strictMode;
     }
 
     public static class EdgeAndMeshData{
