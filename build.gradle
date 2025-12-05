@@ -75,6 +75,16 @@ publishing { //see https://docs.gradle.org/current/userguide/publishing_maven.ht
         }
     }
     repositories {
+        // Local publishing for development/testing
+        mavenLocal()
+
+        // Local directory used to assemble a Central Publisher Portal bundle (staging area)
+        // This keeps publishToMavenLocal working and avoids pushing to OSSRH directly in CI.
+        maven {
+            name = 'CentralPortalStaging'
+            url = uri("${buildDir}/central-portal-staging")
+        }
+
         maven {
             name 'sonatype'
             url 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
@@ -89,4 +99,31 @@ publishing { //see https://docs.gradle.org/current/userguide/publishing_maven.ht
 
 signing {
     sign publishing.publications.mavenJava
+}
+
+// --- Central Publisher API integration (USER_MANAGED) ---
+ext.centralPortalStagingDir = file("${buildDir}/central-portal-staging")
+
+// Helper task alias with clearer name for staging to the local Central Portal directory
+tasks.register('publishToCentralPortalStaging') {
+    dependsOn 'publishMavenJavaPublicationToCentralPortalStagingRepository'
+    group = 'publishing'
+    description = 'Publishes the mavenJava publication to local Central Portal staging directory.'
+}
+
+// Zip the staged repository into a single bundle suitable for uploading to Central Portal
+tasks.register('zipCentralPortalBundle', Zip) {
+    group = 'publishing'
+    description = 'Zips the Central Portal staging directory into build/central-bundle.zip'
+    dependsOn 'publishToCentralPortalStaging'
+    from(centralPortalStagingDir)
+    archiveFileName = 'central-bundle.zip'
+    destinationDirectory = file("${buildDir}")
+}
+
+// Convenience aggregate task
+tasks.register('prepareCentralBundle') {
+    group = 'publishing'
+    description = 'Stages and zips artifacts ready for Central Publisher Portal upload (no network).'
+    dependsOn 'zipCentralPortalBundle'
 }
