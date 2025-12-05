@@ -65,25 +65,9 @@ To sign jars for maven central appropriate details will need to be in C:\Users\{
 
 Note that the keyId is just the last 8 characters of the long id, and the secretRing must be explicitly exported `gpg --export-secret-keys -o secring.gpg`
 
-## Nexus
+## Publishing
 
-Project is provisioned on https://s01.oss.sonatype.org/
-
-Deploy to sonatype via pipeline by:
-- Running in gitlab the publish job
-- Go to https://s01.oss.sonatype.org/ and log in
-- Go to the staging repository and select the repository
-- If all looks well "close" the repository and then Release it
-- Tag the release
-
-
-Deploy to sonatype manually by:
-- Editing the build.gradle file to have a non snapshot version
-- Running `./gradlew publishMavenJavaPublicationToSonaTypeRepository` (see https://docs.gradle.org/current/userguide/publishing_maven.html)
-- Go to https://s01.oss.sonatype.org/ and log in as user oneMillionWorlds
-- Go to the staging repository and select the repository
-- If all looks well "close" the repository and then Release it
-- Tag the release
+See README_PUBLISHISHING.md
 
 ### Testing staging builds
 
