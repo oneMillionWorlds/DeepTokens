@@ -1,5 +1,7 @@
 package com.onemillionworlds.deeptokens;
 
+import com.onemillionworlds.deeptokens.pixelprovider.PixelPosition;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
@@ -22,7 +24,7 @@ public class ImageEdgeExpander{
      * @param edges the edges
      * @return
      */
-    public static BufferedImage processImage(BufferedImage originalImage, int maximumEdgeEpsilonError, int averagingDistance, List<List<Point>> edges) {
+    public static BufferedImage processImage(BufferedImage originalImage, int maximumEdgeEpsilonError, int averagingDistance, List<List <PixelPosition>> edges) {
         int width = originalImage.getWidth();
         int height = originalImage.getHeight();
         BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -33,12 +35,12 @@ public class ImageEdgeExpander{
         int[] pixels = originalImage.getRGB(0, 0, width, height, null, 0, width);
 
 
-        Set<Point> pointsOnEdge = new HashSet<>();
-        for(List<Point> edge : edges){
+        Set <PixelPosition> pointsOnEdge = new HashSet<>();
+        for(List <PixelPosition> edge : edges){
             pointsOnEdge.addAll(EdgeRasterizer.thickenLine(EdgeRasterizer.rasterizeEdge(edge), maximumEdgeEpsilonError));
         }
 
-        for(Point pointNearEdge : pointsOnEdge){
+        for(PixelPosition pointNearEdge : pointsOnEdge){
             if (pointNearEdge.x>=0 && pointNearEdge.y>=0 && pointNearEdge.x<width && pointNearEdge.y<height){
                 Color averageColor = getAverageColorAround(pixels, pointNearEdge.x, pointNearEdge.y, width, height, averagingDistance);
                 if(averageColor != null){

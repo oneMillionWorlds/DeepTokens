@@ -1,27 +1,29 @@
 package com.onemillionworlds.deeptokens;
 
+import com.onemillionworlds.deeptokens.pixelprovider.PixelPosition;
+
 import java.awt.Point;
 
 public class Triangle{
-    private final Point a;
-    private final Point b;
-    private final Point c;
+    private final PixelPosition a;
+    private final PixelPosition b;
+    private final PixelPosition c;
 
-    public Triangle(Point a, Point b, Point c){
+    public Triangle(PixelPosition a, PixelPosition b, PixelPosition c){
         this.a = a;
         this.b = b;
         this.c = c;
     }
 
-    public Point a(){
+    public PixelPosition a(){
         return a;
     }
 
-    public Point b(){
+    public PixelPosition b(){
         return b;
     }
 
-    public Point c(){
+    public PixelPosition c(){
         return c;
     }
 }

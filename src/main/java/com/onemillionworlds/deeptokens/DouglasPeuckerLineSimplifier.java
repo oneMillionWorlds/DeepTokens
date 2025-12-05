@@ -1,5 +1,7 @@
 package com.onemillionworlds.deeptokens;
 
+import com.onemillionworlds.deeptokens.pixelprovider.PixelPosition;
+
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,11 +9,11 @@ import java.util.List;
 public class DouglasPeuckerLineSimplifier{
 
 
-    public static List<List<Point>> simplifyAll(List<List<Point>> points, double epsilon) {
-        List<List<Point>> simplifieds = new ArrayList<>();
-        for (List<Point> list : points) {
+    public static List<List<PixelPosition>> simplifyAll(List<List<PixelPosition>> points, double epsilon) {
+        List<List<PixelPosition>> simplifieds = new ArrayList<>();
+        for (List<PixelPosition> list : points) {
 
-            List<Point> simplified = simplify(list, epsilon);
+            List<PixelPosition> simplified = simplify(list, epsilon);
 
             if (simplified.size()>3){ //get rid of tiny perimeters (probably forgotten pixels)
                 simplifieds.add(simplified);
@@ -20,7 +22,7 @@ public class DouglasPeuckerLineSimplifier{
         return simplifieds;
     }
 
-    public static List<Point> simplify(List<Point> points, double epsilon) {
+    public static List<PixelPosition> simplify(List<PixelPosition> points, double epsilon) {
 
         boolean[] keepPoints = new boolean[points.size()];
         keepPoints[0] = true;
@@ -28,7 +30,7 @@ public class DouglasPeuckerLineSimplifier{
 
         simplifySection(points, 0, points.size() - 1, epsilon, keepPoints);
 
-        List<Point> simplified = new ArrayList<>();
+        List<PixelPosition> simplified = new ArrayList<>();
         for (int i = 0; i < points.size(); i++) {
             if (keepPoints[i]) {
                 simplified.add(points.get(i));
@@ -53,7 +55,7 @@ public class DouglasPeuckerLineSimplifier{
         return simplified;
     }
 
-    private static void simplifySection(List<Point> points, int start, int end, double epsilon, boolean[] keepPoints) {
+    private static void simplifySection(List<PixelPosition> points, int start, int end, double epsilon, boolean[] keepPoints) {
         if (start + 1 == end) {
             return;
         }
@@ -76,7 +78,7 @@ public class DouglasPeuckerLineSimplifier{
     }
 
 
-    static double distanceToLineApprox(Point testPoint, Point lineStart, Point lineEnd) {
+    static double distanceToLineApprox(PixelPosition testPoint, PixelPosition lineStart, PixelPosition lineEnd) {
         int x = testPoint.x;
         int y = testPoint.y;
         double normalLength = approximateHypot(lineEnd.x - lineStart.x, lineEnd.y - lineStart.y);

@@ -1,5 +1,6 @@
 package com.onemillionworlds.deeptokens;
 
+import com.onemillionworlds.deeptokens.pixelprovider.PixelPosition;
 import org.junit.jupiter.api.Test;
 import z.asserts.CollectionAsserts;
 
@@ -22,16 +23,16 @@ class EdgeDeterminerTest{
             }
         }
 
-        List<List<Point>> edgePoints = MooreNeighbourhood.detectPerimeter(bufferedImage);
-        List<Point> expectedEdgePoints = List.of(
-                new Point(1, 1),
-                new Point(2, 1),
-                new Point(3, 1),
-                new Point(3, 2),
-                new Point(3, 3),
-                new Point(2, 3),
-                new Point(1, 3),
-                new Point(1, 2)
+        List<List<PixelPosition>> edgePoints = MooreNeighbourhood.detectPerimeter(bufferedImage);
+        List<PixelPosition> expectedEdgePoints = List.of(
+                new PixelPosition(1, 1),
+                new PixelPosition(2, 1),
+                new PixelPosition(3, 1),
+                new PixelPosition(3, 2),
+                new PixelPosition(3, 3),
+                new PixelPosition(2, 3),
+                new PixelPosition(1, 3),
+                new PixelPosition(1, 2)
             );
 
         assertEquals(1, edgePoints.size());
@@ -55,43 +56,43 @@ class EdgeDeterminerTest{
         }
 
 
-        List<List<Point>> edgePoints = MooreNeighbourhood.detectPerimeter(bufferedImage);
-        List<Point> expectedOuterEdgePoints = List.of(
-                new Point(1, 1),
-                new Point(2, 1),
-                new Point(3, 1),
-                new Point(4, 1),
-                new Point(5, 1),
-                new Point(6, 1),
-                new Point(6, 2),
-                new Point(6, 3),
-                new Point(6, 4),
-                new Point(6, 5),
-                new Point(6, 6),
-                new Point(5, 6),
-                new Point(4, 6),
-                new Point(3, 6),
-                new Point(2, 6),
-                new Point(1, 6),
-                new Point(1, 5),
-                new Point(1, 4),
-                new Point(1, 3),
-                new Point(1, 2)
+        List<List<PixelPosition>> edgePoints = MooreNeighbourhood.detectPerimeter(bufferedImage);
+        List<PixelPosition> expectedOuterEdgePoints = List.of(
+                new PixelPosition(1, 1),
+                new PixelPosition(2, 1),
+                new PixelPosition(3, 1),
+                new PixelPosition(4, 1),
+                new PixelPosition(5, 1),
+                new PixelPosition(6, 1),
+                new PixelPosition(6, 2),
+                new PixelPosition(6, 3),
+                new PixelPosition(6, 4),
+                new PixelPosition(6, 5),
+                new PixelPosition(6, 6),
+                new PixelPosition(5, 6),
+                new PixelPosition(4, 6),
+                new PixelPosition(3, 6),
+                new PixelPosition(2, 6),
+                new PixelPosition(1, 6),
+                new PixelPosition(1, 5),
+                new PixelPosition(1, 4),
+                new PixelPosition(1, 3),
+                new PixelPosition(1, 2)
                 );
 
-        List<Point> expectedInnerEdgePoints = List.of(
-                new Point(2, 2),
-                new Point(2, 3),
-                new Point(2, 4),
-                new Point(2, 5),
-                new Point(3, 5),
-                new Point(4, 5),
-                new Point(5, 5),
-                new Point(5, 4),
-                new Point(5, 3),
-                new Point(5, 2),
-                new Point(4, 2),
-                new Point(3, 2)
+        List<PixelPosition> expectedInnerEdgePoints = List.of(
+                new PixelPosition(2, 2),
+                new PixelPosition(2, 3),
+                new PixelPosition(2, 4),
+                new PixelPosition(2, 5),
+                new PixelPosition(3, 5),
+                new PixelPosition(4, 5),
+                new PixelPosition(5, 5),
+                new PixelPosition(5, 4),
+                new PixelPosition(5, 3),
+                new PixelPosition(5, 2),
+                new PixelPosition(4, 2),
+                new PixelPosition(3, 2)
 
         );
 
@@ -116,19 +117,19 @@ class EdgeDeterminerTest{
         bufferedImage.setRGB(5, 4, new Color(0,0,0,0).getRGB());
         bufferedImage.setRGB(4, 5, new Color(0,0,0,0).getRGB());
 
-        List<List<Point>> edgePoints = MooreNeighbourhood.detectPerimeter(bufferedImage);
+        List<List<PixelPosition>> edgePoints = MooreNeighbourhood.detectPerimeter(bufferedImage);
 
         //not testing outer edge because other tests do that
 
-        List<Point> expectedInnerEdgePoints = List.of(
-                new Point(2, 4),
-                new Point(3, 3),
-                new Point(4, 2),
-                new Point(5, 3),
-                new Point(6, 4),
-                new Point(5, 5),
-                new Point(4, 6),
-                new Point(3, 5)
+        List<PixelPosition> expectedInnerEdgePoints = List.of(
+                new PixelPosition(2, 4),
+                new PixelPosition(3, 3),
+                new PixelPosition(4, 2),
+                new PixelPosition(5, 3),
+                new PixelPosition(6, 4),
+                new PixelPosition(5, 5),
+                new PixelPosition(4, 6),
+                new PixelPosition(3, 5)
 
         );
 

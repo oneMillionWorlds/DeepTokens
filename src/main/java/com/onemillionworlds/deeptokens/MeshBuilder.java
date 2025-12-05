@@ -6,6 +6,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.util.BufferUtils;
+import com.onemillionworlds.deeptokens.pixelprovider.PixelPosition;
 
 import java.awt.Point;
 import java.nio.FloatBuffer;
@@ -16,7 +17,7 @@ import java.util.Optional;
 public class MeshBuilder{
 
 
-    public static Mesh createCustomMesh(List<Triangle> triangles, List<List<Point>> edges, float imageWidthPixels, float imageHeightPixels, float objectWidth, float objectDepth, float minAngleToBecomeSharp, Optional<ColorRGBA> edgeTint) {
+    public static Mesh createCustomMesh(List<Triangle> triangles, List<List<PixelPosition>> edges, float imageWidthPixels, float imageHeightPixels, float objectWidth, float objectDepth, float minAngleToBecomeSharp, Optional<ColorRGBA> edgeTint) {
         float halfDepth = objectDepth / 2f;
         Mesh mesh = new Mesh();
 
@@ -36,7 +37,7 @@ public class MeshBuilder{
         addFace(triangles, vertices, normals, texCoords, indices, vertexColors, -halfDepth, imageWidthPixels, imageHeightPixels, pixelScale, false); // lower face
 
         // Add edge vertices, texture coords, and indices
-        for(List<Point> edge : edges){
+        for(List<PixelPosition> edge : edges){
             addEdges(edge, vertices, normals, texCoords, indices, vertexColors, edgeTint, halfDepth, imageWidthPixels, pixelScale, imageHeightPixels, minAngleToBecomeSharp);
         }
 
@@ -102,7 +103,7 @@ public class MeshBuilder{
         }
     }
 
-    private static void addEdges(List<Point> edges, List<Vector3f> vertices, List<Vector3f> normals, List<Vector2f> texCoords, List<Integer> indices, List<ColorRGBA> vertexColors, Optional<ColorRGBA> edgeTint, float halfDepth, float imageWidth, float pixelScale, float imageHeight, float sharpnessAngle) {
+    private static void addEdges(List<PixelPosition> edges, List<Vector3f> vertices, List<Vector3f> normals, List<Vector2f> texCoords, List<Integer> indices, List<ColorRGBA> vertexColors, Optional<ColorRGBA> edgeTint, float halfDepth, float imageWidth, float pixelScale, float imageHeight, float sharpnessAngle) {
         int startIdx = vertices.size();
 
         assert (vertexColors ==null) == edgeTint.isEmpty() : "vertexColors and edgeTint must be both null or both non-null";
@@ -111,8 +112,8 @@ public class MeshBuilder{
         List<Boolean> sharpPoints = calculateSharpPoint(edges, sharpnessAngle);
 
         for (int i = 0; i < edges.size(); i++) {
-            Point current = edges.get(i);
-            Point next = edges.get((i + 1) % edges.size()); // Wrap around to the first point
+            PixelPosition current = edges.get(i);
+            PixelPosition next = edges.get((i + 1) % edges.size()); // Wrap around to the first point
 
             // Define vertices for the edge quad
             Vector3f v1 = new Vector3f(current.x*pixelScale, current.y*pixelScale, -halfDepth);
@@ -248,14 +249,14 @@ public class MeshBuilder{
         return buff;
     }
 
-    public static List<Vector3f> calculateOutwardNormals(List<Point> edges) {
+    public static List<Vector3f> calculateOutwardNormals(List <PixelPosition> edges) {
         List<Vector3f> normals = new ArrayList<>();
         int size = edges.size();
 
         for (int i = 0; i < size; i++) {
-            Point current = edges.get(i);
-            Point prev = edges.get(i > 0 ? i - 1 : size - 1);
-            Point next = edges.get((i + 1) % size);
+            PixelPosition current = edges.get(i);
+            PixelPosition prev = edges.get(i > 0 ? i - 1 : size - 1);
+            PixelPosition next = edges.get((i + 1) % size);
 
             Vector3f normalPrev = calculateNormal(prev, current);
             Vector3f normalNext = calculateNormal(current, next);
@@ -269,14 +270,14 @@ public class MeshBuilder{
         return normals;
     }
 
-    public static List<Boolean> calculateSharpPoint(List<Point> edges, float sharpnessCriteria) {
+    public static List<Boolean> calculateSharpPoint(List <PixelPosition> edges, float sharpnessCriteria) {
         List<Boolean> sharpPoints = new ArrayList<>();
         int size = edges.size();
 
         for (int i = 0; i < size; i++) {
-            Point current = edges.get(i);
-            Point prev = edges.get(i > 0 ? i - 1 : size - 1);
-            Point next = edges.get((i + 1) % size);
+            PixelPosition current = edges.get(i);
+            PixelPosition prev = edges.get(i > 0 ? i - 1 : size - 1);
+            PixelPosition next = edges.get((i + 1) % size);
 
             Vector3f normalPrev = calculateNormal(prev, current);
             Vector3f normalNext = calculateNormal(current, next);
@@ -291,7 +292,7 @@ public class MeshBuilder{
 
     }
 
-    private static Vector3f calculateNormal(Point from, Point to) {
+    private static Vector3f calculateNormal(PixelPosition from, PixelPosition to) {
         // Normal calculation for a segment
         float dx = to.x - from.x;
         float dy = to.y - from.y;

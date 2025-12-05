@@ -1,6 +1,9 @@
 package com.onemillionworlds.deeptokens;
 
-import java.awt.Point;
+import com.onemillionworlds.deeptokens.pixelprovider.BufferedImagePixelProvider;
+import com.onemillionworlds.deeptokens.pixelprovider.PixelPosition;
+import com.onemillionworlds.deeptokens.pixelprovider.PixelProvider;
+
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -12,36 +15,36 @@ public class MooreNeighbourhood {
     /**
      * Outputs the edges and holes of the given image. Note that the outer edges are wound anticlockwise, and the holes are wound clockwise.
      */
-    static List<List<Point>> detectPerimeter(BufferedImage bufferedImage) {
-        return detectPerimeter(new Pixels(bufferedImage));
+    static List<List<PixelPosition>> detectPerimeter(BufferedImage bufferedImage) {
+        return detectPerimeter(new BufferedImagePixelProvider(bufferedImage));
     }
 
     /**
      * Outputs the edges and holes of the given image. Note that the outer edges are wound anticlockwise, and the holes are wound clockwise.
      */
-    static List<List<Point>> detectPerimeter(Pixels pixels) {
-        int width = pixels.size.width;
-        int height = pixels.size.height;
-        HashSet<Point> found = new HashSet<>();
-        List<Point> list;
-        List<List<Point>> lists = new ArrayList<>();
+    static List<List<PixelPosition>> detectPerimeter(PixelProvider pixels) {
+        int width = pixels.getImageWidth();
+        int height = pixels.getImageHeight();
+        HashSet<PixelPosition> found = new HashSet<>();
+        List<PixelPosition> list;
+        List<List<PixelPosition>> lists = new ArrayList<>();
         boolean inside = false;
 
-        List<Function<Point, Point>> neighborhood = List.of(
-                point -> new Point(point.x - 1, point.y),
-                point -> new Point(point.x - 1, point.y - 1),
-                point -> new Point(point.x, point.y - 1),
-                point -> new Point(point.x + 1, point.y - 1),
-                point -> new Point(point.x + 1, point.y),
-                point -> new Point(point.x + 1, point.y + 1),
-                point -> new Point(point.x, point.y + 1),
-                point -> new Point(point.x - 1, point.y + 1)
+        List<Function<PixelPosition, PixelPosition>> neighborhood = List.of(
+                point -> new PixelPosition(point.x - 1, point.y),
+                point -> new PixelPosition(point.x - 1, point.y - 1),
+                point -> new PixelPosition(point.x, point.y - 1),
+                point -> new PixelPosition(point.x + 1, point.y - 1),
+                point -> new PixelPosition(point.x + 1, point.y),
+                point -> new PixelPosition(point.x + 1, point.y + 1),
+                point -> new PixelPosition(point.x, point.y + 1),
+                point -> new PixelPosition(point.x - 1, point.y + 1)
         );
         int[] checkLocationNrMap = new int[]{7, 7, 1, 1, 3, 3, 5, 5};
 
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
-                Point point = new Point(x, y);
+                PixelPosition point = new PixelPosition(x, y);
                 if (found.contains(point) && !inside) {
                     inside = true;
                     continue;
@@ -61,13 +64,13 @@ public class MooreNeighbourhood {
                     found.add(point);
                     list.add(point);
                     int checkLocationNr = 1;
-                    Point startPos = point;
+                    PixelPosition startPos = point;
                     int counter2 = 0;
 
                     while (true) {
-                        Point checkPosition = neighborhood.get(checkLocationNr - 1).apply(point);
+                        PixelPosition checkPosition = neighborhood.get(checkLocationNr - 1).apply(point);
 
-                        if (pixels.contains(checkPosition) && !pixels.isTransparent(checkPosition.x, checkPosition.y)) {
+                        if (pixels.imageContainsPoint(checkPosition) && !pixels.isTransparent(checkPosition.x, checkPosition.y)) {
                             int newCheckLocationNr = checkLocationNrMap[checkLocationNr - 1];
 
                             if (checkPosition.equals(startPos)) {
@@ -93,7 +96,7 @@ public class MooreNeighbourhood {
             }
         }
 
-        for(List<Point> perimeter : lists){
+        for(List<PixelPosition> perimeter : lists){
             correctChamferedCorners(perimeter, pixels);
         }
 
@@ -107,27 +110,27 @@ public class MooreNeighbourhood {
      * Theoretically the smoothing algorithm could take it back out again but it gives it a better starting shape so
      * it's likely not to.
      */
-    private static void correctChamferedCorners(List<Point> perimeter, Pixels pixels) {
+    private static void correctChamferedCorners(List<PixelPosition> perimeter, PixelProvider pixels) {
         // Iterate over the points in the perimeter list
         int stopLength =  perimeter.size();
         int originalSize = perimeter.size();
         for (int i = 0; i < stopLength; i++) {
-            Point a = perimeter.get(i);
-            Point b = perimeter.get((i + 1) % perimeter.size());
-            Point c = perimeter.get((i + 2) % perimeter.size());
-            Point d = perimeter.get((i + 3) % perimeter.size());
+            PixelPosition a = perimeter.get(i);
+            PixelPosition b = perimeter.get((i + 1) % perimeter.size());
+            PixelPosition c = perimeter.get((i + 2) % perimeter.size());
+            PixelPosition d = perimeter.get((i + 3) % perimeter.size());
 
 
             boolean abHorizontal = a.y == b.y;
             boolean cdHorizontal = c.y == d.y;
 
             // Potential corner point (p)
-            Point p;
+            PixelPosition p;
 
             if (abHorizontal && !cdHorizontal) {
-                p = new Point(c.x, a.y);
+                p = new PixelPosition(c.x, a.y);
             } else if (!abHorizontal && cdHorizontal) {
-                p = new Point(a.x, c.y);
+                p = new PixelPosition(a.x, c.y);
             } else {
                 continue;
             }
@@ -149,32 +152,9 @@ public class MooreNeighbourhood {
         }
     }
 
-    private static boolean isStraightLine(Point a, Point b, Point p) {
+    private static boolean isStraightLine(PixelPosition a, PixelPosition b, PixelPosition p) {
         // Check if a, b, and p are in a straight line (either horizontally or vertically)
         return (a.x == b.x && b.x == p.x) || (a.y == b.y && b.y == p.y);
-    }
-
-    static class Pixels {
-        final java.awt.Dimension size;
-        BufferedImage image;
-        Pixels(BufferedImage image) {
-            size = new java.awt.Dimension(image.getWidth(), image.getHeight());
-            this.image = image;
-        }
-
-        boolean isTransparent(int x, int y) {
-            if (!contains(new Point(x, y))) {
-                return true;
-            }
-            int pixel = image.getRGB(x, y);
-            int alpha = (pixel >> 24) & 0xff;
-            return alpha == 0;
-        }
-
-        boolean contains(Point point) {
-            return point.x >= 0 && point.x < size.width && point.y >= 0 && point.y < size.height;
-        }
-
     }
 
 }

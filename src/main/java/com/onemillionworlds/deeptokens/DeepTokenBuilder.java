@@ -9,6 +9,10 @@ import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 import com.jme3.texture.plugins.AWTLoader;
+import com.onemillionworlds.deeptokens.pixelprovider.BufferedImagePixelProvider;
+import com.onemillionworlds.deeptokens.pixelprovider.FlippedPixelProvider;
+import com.onemillionworlds.deeptokens.pixelprovider.PixelPosition;
+import com.onemillionworlds.deeptokens.pixelprovider.PixelProvider;
 
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -148,14 +152,14 @@ public class DeepTokenBuilder{
      * </p>
      *
      */
-    public EdgeAndMeshData bufferedImageToMesh(BufferedImage image){
+    public EdgeAndMeshData bufferedImageToMesh(PixelProvider image){
         if (flipY) {
-            image = createFlipped(image);
+            image = new FlippedPixelProvider(image);
         }
 
-        List<List<Point>> perimeters = MooreNeighbourhood.detectPerimeter(image);
+        List<List<PixelPosition>> perimeters = MooreNeighbourhood.detectPerimeter(image);
 
-        List<List<Point>> simplePerimeters = DouglasPeuckerLineSimplifier.simplifyAll(perimeters, edgeSimplificationEpsilon);
+        List<List<PixelPosition>> simplePerimeters = DouglasPeuckerLineSimplifier.simplifyAll(perimeters, edgeSimplificationEpsilon);
 
         EdgeAndHoleSeparator.EdgesAndHoles edgesAndHoles = EdgeAndHoleSeparator.separatePerimeters(simplePerimeters);
 
@@ -168,8 +172,8 @@ public class DeepTokenBuilder{
         }
 
         // Step 3: Create a Custom Mesh
-        float imageWidth = image.getWidth();
-        float imageHeight = image.getHeight();
+        float imageWidth = image.getImageWidth();
+        float imageHeight = image.getImageHeight();
         Mesh mesh = MeshBuilder.createCustomMesh(triangles, simplePerimeters, imageWidth, imageHeight, tokenWidth, tokenDepth, minimumSharpAngle, edgeTint);
         if (setStatic) {
             mesh.setStatic();
@@ -196,7 +200,7 @@ public class DeepTokenBuilder{
     @SuppressWarnings("unused")
     public Geometry bufferedImageToUnshadedGeometry(BufferedImage image, AssetManager assetManager){
 
-        EdgeAndMeshData mesh = bufferedImageToMesh(image);
+        EdgeAndMeshData mesh = bufferedImageToMesh(new BufferedImagePixelProvider(image));
 
         // Convert BufferedImage to JME Texture
         Texture texture = imageToTexture(image, mesh.getDetectedEdges());
@@ -234,7 +238,7 @@ public class DeepTokenBuilder{
      */
     public Geometry bufferedImageToLitGeometry(BufferedImage image, AssetManager assetManager){
 
-        EdgeAndMeshData mesh = bufferedImageToMesh(image);
+        EdgeAndMeshData mesh = bufferedImageToMesh(new BufferedImagePixelProvider(image));
 
         // Convert BufferedImage to JME Texture
         Texture texture = imageToTexture(image, mesh.getDetectedEdges());
@@ -265,7 +269,7 @@ public class DeepTokenBuilder{
      */
     public Geometry bufferedImageToPBRLitGeometry(BufferedImage image, AssetManager assetManager){
 
-        EdgeAndMeshData mesh = bufferedImageToMesh(image);
+        EdgeAndMeshData mesh = bufferedImageToMesh(new BufferedImagePixelProvider(image));
 
         // Convert BufferedImage to JME Texture
         Texture texture = imageToTexture(image, mesh.getDetectedEdges());
@@ -292,7 +296,7 @@ public class DeepTokenBuilder{
      * This applies the edge bluring to ensure that the edge is not "dirty" or if simplification
      * has caused the mesh to "slip off" the texture. Then it converts the image to a texture.
      */
-    public Texture imageToTexture(BufferedImage image, List<List<Point>> detectedEdges){
+    public Texture imageToTexture(BufferedImage image, List<List <PixelPosition>> detectedEdges){
         AWTLoader loader=new AWTLoader();
         BufferedImage processedImage = imageToImage(image, detectedEdges);
 
@@ -312,12 +316,12 @@ public class DeepTokenBuilder{
      * </p>
      */
     @SuppressWarnings("unused")
-    public BufferedImage imageToImage(BufferedImage image, List<List<Point>> detectedEdges){
+    public BufferedImage imageToImage(BufferedImage image, List<List <PixelPosition>> detectedEdges){
         if (flipY) {
             detectedEdges = detectedEdges.stream().map(edge -> {
-                List<Point> flippedEdge = new ArrayList<>();
-                for(Point point : edge){
-                    flippedEdge.add(new Point(point.x, image.getHeight() - point.y));
+                List <PixelPosition> flippedEdge = new ArrayList<>();
+                for(PixelPosition point : edge){
+                    flippedEdge.add(new PixelPosition(point.x, image.getHeight() - point.y));
                 }
                 return flippedEdge;
             }).collect(Collectors.toList());
@@ -327,15 +331,15 @@ public class DeepTokenBuilder{
     }
 
     public static class EdgeAndMeshData{
-        public final List<List<Point>> detectedEdges;
+        public final List<List <PixelPosition>> detectedEdges;
         public final Mesh mesh;
 
-        public EdgeAndMeshData(List<List<Point>> detectedEdges, Mesh mesh){
+        public EdgeAndMeshData(List<List <PixelPosition>> detectedEdges, Mesh mesh){
             this.detectedEdges = detectedEdges;
             this.mesh = mesh;
         }
 
-        public List<List<Point>> getDetectedEdges(){
+        public List<List <PixelPosition>> getDetectedEdges(){
             return detectedEdges;
         }
 

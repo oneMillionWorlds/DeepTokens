@@ -1,6 +1,7 @@
 package com.onemillionworlds.deeptokens;
 
 import com.jme3.math.Vector2f;
+import com.onemillionworlds.deeptokens.pixelprovider.PixelPosition;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -23,18 +24,18 @@ import java.util.stream.Collectors;
  */
 public class EdgeHoleMapper {
 
-    public static List<EdgeWithContainedHoles> mapHolesToEdges(List<List<Point>> edges, List<List<Point>> holes) {
-        Map<List<Point>, List<List<Point>>> edgeToHolesMap = new HashMap<>();
+    public static List<EdgeWithContainedHoles> mapHolesToEdges(List<List<PixelPosition>> edges, List<List<PixelPosition>> holes) {
+        Map<List<PixelPosition>, List<List<PixelPosition>>> edgeToHolesMap = new HashMap<>();
 
-        for(List<Point> edge : edges){
+        for(List<PixelPosition> edge : edges){
             edgeToHolesMap.put(edge, new ArrayList<>());
         }
 
-        for (List<Point> hole : holes) {
-            List<Point> smallestContainingEdge = null;
+        for (List<PixelPosition> hole : holes) {
+            List <PixelPosition> smallestContainingEdge = null;
             double smallestArea = Double.MAX_VALUE;
 
-            for (List<Point> edge : edges) {
+            for (List<PixelPosition> edge : edges) {
                 if (isHoleInEdge(hole, edge)) {
                     double area = calculatePolygonArea(edge);
                     if (area < smallestArea) {
@@ -50,15 +51,15 @@ public class EdgeHoleMapper {
         }
 
         List<EdgeWithContainedHoles> edgeWithContainedHoles = new ArrayList<>();
-        for (Map.Entry<List<Point>, List<List<Point>>> entry : edgeToHolesMap.entrySet()) {
+        for (Map.Entry<List<PixelPosition>, List<List<PixelPosition>>> entry : edgeToHolesMap.entrySet()) {
             edgeWithContainedHoles.add(new EdgeWithContainedHoles(entry.getKey(), entry.getValue()));
         }
 
         return edgeWithContainedHoles;
     }
 
-    private static boolean isHoleInEdge(List<Point> hole, List<Point> edge) {
-        for (Point holePoint : hole) {
+    private static boolean isHoleInEdge(List<PixelPosition> hole, List<PixelPosition> edge) {
+        for (PixelPosition holePoint : hole) {
             if (isPointInPolygon(holePoint, edge)) {
                 return true;
             }
@@ -66,7 +67,7 @@ public class EdgeHoleMapper {
         return false;
     }
 
-    private static boolean isPointInPolygon(Point p, List<Point> polygon) {
+    private static boolean isPointInPolygon(PixelPosition p, List<PixelPosition> polygon) {
         boolean result = false;
         int j = polygon.size() - 1;
         for (int i = 0; i < polygon.size(); i++) {
@@ -79,7 +80,7 @@ public class EdgeHoleMapper {
         return result;
     }
 
-    private static double calculatePolygonArea(List<Point> points) {
+    private static double calculatePolygonArea(List <PixelPosition> points) {
         double area = 0.0;
         int j = points.size() - 1;
         for (int i = 0; i < points.size(); i++) {
@@ -94,30 +95,30 @@ public class EdgeHoleMapper {
      */
     public static class EdgeWithContainedHoles{
 
-        List<Point> edge;
-        List<List<Point>> holes;
+        List<PixelPosition> edge;
+        List<List<PixelPosition>> holes;
 
-        public EdgeWithContainedHoles(List<Point> edge, List<List<Point>> holes){
+        public EdgeWithContainedHoles(List<PixelPosition> edge, List<List<PixelPosition>> holes){
             this.edge = edge;
             this.holes = holes;
         }
 
 
 
-        public List<Point> asSinglePerimeter() {
-            List<Point> singlePerimeter = new ArrayList<>(edge);
+        public List <PixelPosition> asSinglePerimeter() {
+            List<PixelPosition> singlePerimeter = new ArrayList<>(edge);
 
-            List<List<Point>> holes = new ArrayList<>(this.holes);
+            List<List<PixelPosition>> holes = new ArrayList<>(this.holes);
 
             while(!holes.isEmpty()){
-                List<Point> bestHoleToAdd = holes.stream()
+                List<PixelPosition> bestHoleToAdd = holes.stream()
                         .min(Comparator.comparingDouble(hole -> findClosestPoints(singlePerimeter, hole).distance()))
                         .orElseThrow(() -> new RuntimeException("Suprising no holes"));
 
                 holes.remove(bestHoleToAdd);
                 ClosestPoints closestPoints = findClosestPoints(singlePerimeter, bestHoleToAdd);
                 int edgeInsertIndex = singlePerimeter.indexOf(closestPoints.edgePoint());
-                List<Point> connection = createConnection(closestPoints, bestHoleToAdd);
+                List <PixelPosition> connection = createConnection(closestPoints, bestHoleToAdd);
                 singlePerimeter.addAll(edgeInsertIndex + 1, connection);
             }
 
@@ -130,13 +131,13 @@ public class EdgeHoleMapper {
          * @return
          */
         public BufferedImage completeLineDebugImage(){
-            List<Point> perimeter = asSinglePerimeter();
+            List <PixelPosition> perimeter = asSinglePerimeter();
             int maxX = perimeter.stream().mapToInt(p -> p.x).max().getAsInt()+20;
             int targetMaxX = 1000;
 
             float multiplier = Math.max(targetMaxX / (float)maxX, 1);
             perimeter = perimeter.stream().map(
-                    p -> new Point((int)(p.x * multiplier)+20, (int)(p.y * multiplier)+20)
+                    p -> new PixelPosition((int)(p.x * multiplier)+20, (int)(p.y * multiplier)+20)
                 ).collect(Collectors.toList());
 
             maxX = perimeter.stream().mapToInt(p -> p.x).max().getAsInt()+20;
@@ -148,9 +149,9 @@ public class EdgeHoleMapper {
             graphics2D.setBackground(Color.BLACK);
             graphics2D.setStroke(new BasicStroke(3));
             for(int i=0;i<perimeter.size();i++){
-                Point lastPoint = perimeter.get( i==0 ? perimeter.size()-1 : (i-1));
-                Point point = perimeter.get(i);
-                Point nextPoint = perimeter.get((i+1)%perimeter.size());
+                PixelPosition lastPoint = perimeter.get( i==0 ? perimeter.size()-1 : (i-1));
+                PixelPosition point = perimeter.get(i);
+                PixelPosition nextPoint = perimeter.get((i+1)%perimeter.size());
                 float intensitity = 0.25f + 0.75f * (i/(float)perimeter.size());
 
                 Vector2f backVector = new Vector2f(point.x-lastPoint.x, point.y- lastPoint.y ).normalizeLocal();
@@ -180,15 +181,15 @@ public class EdgeHoleMapper {
             return new Vector2f(-in.y, in.x);
         }
 
-        private ClosestPoints findClosestPoints(List<Point> edge, List<Point> hole) {
+        private ClosestPoints findClosestPoints(List<PixelPosition> edge, List<PixelPosition> hole) {
             double minDistance = Double.MAX_VALUE;
-            Point closestEdgePoint = null;
-            Point closestHolePoint = null;
+            PixelPosition closestEdgePoint = null;
+            PixelPosition closestHolePoint = null;
 
             for (int i=0;i<edge.size();i++) {
-                Point edgePoint = edge.get(i);
+                PixelPosition edgePoint = edge.get(i);
                 for (int j =0;j<hole.size();j++) {
-                    Point holePoint = hole.get(j);
+                    PixelPosition holePoint = hole.get(j);
                     double distance = edgePoint.distance(holePoint);
                     if (distance < minDistance) {
                         //check if the line made between the two points is "facing the right way" for the break to be valid.
@@ -213,21 +214,21 @@ public class EdgeHoleMapper {
             return new ClosestPoints(closestEdgePoint, closestHolePoint);
         }
 
-        private List<Point> createConnection(ClosestPoints closestPoints, List<Point> hole) {
+        private List <PixelPosition> createConnection(ClosestPoints closestPoints, List <PixelPosition> hole) {
 
-            Point edgePoint = closestPoints.edgePoint();
-            Point holePoint = closestPoints.holePoint();
+            PixelPosition edgePoint = closestPoints.edgePoint();
+            PixelPosition holePoint = closestPoints.holePoint();
 
             // Rearrange the hole points so that the hole starts and ends at the closest hole point
             int holeStartIndex = hole.indexOf(holePoint);
-            List<Point> rearrangedHole = new ArrayList<>();
+            List <PixelPosition> rearrangedHole = new ArrayList<>();
             for (int i = holeStartIndex; i < hole.size(); i++) {
                 rearrangedHole.add(hole.get(i));
             }
             for (int i = 0; i < holeStartIndex; i++) {
                 rearrangedHole.add(hole.get(i));
             }
-            List<Point> connection = new ArrayList<>(rearrangedHole.size() + 2);
+            List <PixelPosition> connection = new ArrayList<>(rearrangedHole.size() + 2);
             connection.addAll(rearrangedHole);
             connection.add(holePoint);
             connection.add(edgePoint);
@@ -236,19 +237,19 @@ public class EdgeHoleMapper {
         }
 
         private static class ClosestPoints{
-            Point edgePoint;
-            Point holePoint;
+            PixelPosition edgePoint;
+            PixelPosition holePoint;
 
-            public ClosestPoints(Point edgePoint, Point holePoint){
+            public ClosestPoints(PixelPosition edgePoint, PixelPosition holePoint){
                 this.edgePoint = edgePoint;
                 this.holePoint = holePoint;
             }
 
-            public Point edgePoint(){
+            public PixelPosition edgePoint(){
                 return edgePoint;
             }
 
-            public Point holePoint(){
+            public PixelPosition holePoint(){
                 return holePoint;
             }
 
@@ -257,7 +258,7 @@ public class EdgeHoleMapper {
             }
         }
 
-        private static boolean isBDInArc(Point point, List<Point> edge, int indexOfCentrePointOfLine){
+        private static boolean isBDInArc(PixelPosition point, List <PixelPosition> edge, int indexOfCentrePointOfLine){
             int before = indexOfCentrePointOfLine - 1;
             if (before < 0){
                 before+= edge.size();
@@ -267,13 +268,13 @@ public class EdgeHoleMapper {
                 after -= edge.size();
             }
 
-            Point a = edge.get(before);
-            Point b = edge.get(indexOfCentrePointOfLine);
-            Point c = edge.get(after);
+            PixelPosition a = edge.get(before);
+            PixelPosition b = edge.get(indexOfCentrePointOfLine);
+            PixelPosition c = edge.get(after);
             return isBDInArc(a, b, c, point);
         }
 
-        public static boolean isBDInArc(Point A, Point B, Point C, Point D) {
+        public static boolean isBDInArc(PixelPosition A, PixelPosition B, PixelPosition C, PixelPosition D) {
 
             double angleA = Math.atan2(A.y - B.y, A.x - B.x);
             double angleC = Math.atan2(C.y - B.y, C.x - B.x);
@@ -290,11 +291,11 @@ public class EdgeHoleMapper {
             return angleA < angleD && angleD < angleC;
         }
 
-        private static int crossProduct(Point v1, Point v2) {
+        private static int crossProduct(PixelPosition v1, PixelPosition v2) {
             return v1.x * v2.y - v1.y * v2.x;
         }
 
-        private static boolean pointIsToLeftOfLine(Point point, Point a, Point b,  Point c){
+        private static boolean pointIsToLeftOfLine(PixelPosition point, PixelPosition a, PixelPosition b,  PixelPosition c){
             double determinantAB = (b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x);
             double determinantBC = (c.x - b.x) * (point.y - b.y) - (c.y - b.y) * (point.x - b.x);
 

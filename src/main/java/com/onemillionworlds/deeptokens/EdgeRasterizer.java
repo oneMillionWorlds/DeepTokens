@@ -1,6 +1,8 @@
 package com.onemillionworlds.deeptokens;
 
-import java.awt.Point;
+import com.onemillionworlds.deeptokens.pixelprovider.PixelPosition;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -8,8 +10,8 @@ import java.util.Set;
 
 public class EdgeRasterizer{
 
-    public static List<Point> rasterizeEdge(List<Point> edgePoints) {
-        List<Point> rasterizedPoints = new ArrayList<>();
+    public static List <PixelPosition> rasterizeEdge(List <PixelPosition> edgePoints) {
+        List <PixelPosition> rasterizedPoints = new ArrayList<>();
 
         for (int i = 0; i < edgePoints.size() - 1; i++) {
             rasterizedPoints.addAll(generateLine(edgePoints.get(i), edgePoints.get(i + 1)));
@@ -18,14 +20,14 @@ public class EdgeRasterizer{
         return rasterizedPoints;
     }
 
-    public static Set<Point> thickenLine(List<Point> linePoints, int width) {
-        Set<Point> thickenedPoints = new HashSet<>();
+    public static Set <PixelPosition> thickenLine(List <PixelPosition> linePoints, int width) {
+        Set <PixelPosition> thickenedPoints = new HashSet<>();
         int d = width;
 
-        for (Point p : linePoints) {
+        for (PixelPosition p : linePoints) {
             for (int dx = -d; dx <= d; dx++) {
                 for (int dy = -d; dy <= d; dy++) {
-                    thickenedPoints.add(new Point(p.x + dx, p.y + dy));
+                    thickenedPoints.add(new PixelPosition(p.x + dx, p.y + dy));
                 }
             }
         }
@@ -33,8 +35,8 @@ public class EdgeRasterizer{
         return thickenedPoints;
     }
 
-    private static List<Point> generateLine(Point p1, Point p2) {
-        List<Point> linePoints = new ArrayList<>();
+    private static List <PixelPosition> generateLine(PixelPosition p1, PixelPosition p2) {
+        List <PixelPosition> linePoints = new ArrayList<>();
 
         int x1 = p1.x;
         int y1 = p1.y;
@@ -51,7 +53,7 @@ public class EdgeRasterizer{
         int e2;
 
         while (true) {
-            linePoints.add(new Point(x1, y1));
+            linePoints.add(new PixelPosition(x1, y1));
 
             if (x1 == x2 && y1 == y2) {
                 break;
