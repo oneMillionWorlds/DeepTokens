@@ -29,14 +29,16 @@ Load an image
 
     BufferedImage tokenImage = ImageIO.read(TestApplication.class.getResourceAsStream("/pathToImage.png"));
 
-Request this be turned into a deep token
+Use your jMonkeyEngine application's `assetManager` and request this be turned into a deep token
 
-    Geometry deepToken = deepTokenBuilder.bufferedImageToLitGeometry(tokenImage);
+    Geometry deepToken = deepTokenBuilder.bufferedImageToLitGeometry(tokenImage, assetManager);
 
-Or just get the mesh and texture and put it together yourself (if you want to use an unusual material)
+Or just get the mesh and texture and put it together yourself (if you want to use an unusual material). Import `com.onemillionworlds.deeptokens.pixelprovider.BufferedImagePixelProvider` for the image adapter:
 
-    Mesh mesh = deepTokenBuilder.bufferedImageToMesh(tokenImage);
-    Texture texture = deepTokenBuilder.imageToTexture(tokenImage);
+    DeepTokenBuilder.EdgeAndMeshData data = deepTokenBuilder.bufferedImageToMesh(
+            new BufferedImagePixelProvider(tokenImage));
+    Mesh mesh = data.getMesh();
+    Texture texture = deepTokenBuilder.imageToTexture(tokenImage, data.getDetectedEdges());
 
 (Note that the imageToTexture adds a margin on the image in case a simplification of the edge means the shape "slips off the edge")
 
